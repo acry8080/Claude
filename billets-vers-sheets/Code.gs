@@ -215,7 +215,7 @@ function analyserMessage_(message) {
     mail: adresse_(message.getTo() || ''),
     nom: nom_(lignes),
     carte: carte_(texte, lignes),
-    livraison: /\binstant/i.test(texte) ? 'INSTANT' : '',
+    livraison: livraison_(texte),
   };
 }
 
@@ -224,11 +224,17 @@ function analyserMessage_(message) {
  * sur la ligne suivante.
  */
 function valeurApres_(lignes, libelle) {
+  const vide = function (v) { return /^[-–\s]*$/.test(v); };
+  const estLibelle = function (l) { return /^[^:]{1,30}:/.test(l); };
   for (let i = 0; i < lignes.length; i++) {
     if (!libelle.test(lignes[i])) continue;
-    const surLaLigne = lignes[i].replace(libelle, '').replace(/^\s*[:#\-–]?\s*/, '');
-    if (surLaLigne) return surLaLigne.slice(0, 200);
-    if (lignes[i + 1]) return lignes[i + 1].slice(0, 200);
+    const surLaLigne = lignes[i]
+      .replace(libelle, '')
+      .replace(/^\(s\)/i, '') // « Seat(s) », « Ticket(s) »
+      .replace(/^\s*[:#\-–]?\s*/, '');
+    if (surLaLigne) return vide(surLaLigne) ? '' : surLaLigne.slice(0, 200);
+    const suivante = lignes[i + 1] || '';
+    return vide(suivante) || estLibelle(suivante) ? '' : suivante.slice(0, 200);
   }
   return '';
 }
@@ -241,11 +247,15 @@ function numeroCommande_(texte) {
 }
 
 function evenement_(objet, lignes) {
-  const champ = valeurApres_(lignes, /^(événement|évènement|event|match)\b/i);
+  const champ = valeurApres_(lignes, /^(événement|évènement|event|match)\s*:/i);
   if (champ) return champ;
+  // StubHub : « Saturday, October 24, 2026 | 18:30 » puis le nom de l'événement.
+  for (let i = 0; i < lignes.length - 1; i++) {
+    if (/\|\s*\d{1,2}[:h]\d{2}/.test(lignes[i]) && dateEvenement_(lignes[i])) return lignes[i + 1];
+  }
   // Ex. « Votre commande pour Coldplay est confirmée », « Your order for X is confirmed »
   const m = objet.match(/\b(?:pour|for)\s+(.+?)(?:\s+(?:est|is|a été|has been)\b|\s*[-–|]|$)/i);
-  return m ? m[1].trim() : '';
+  return m && !/^(your|votre)\b/i.test(m[1]) ? m[1].trim() : '';
 }
 
 const MOIS_ = {
@@ -286,10 +296,16 @@ function quantite_(texte) {
 /** Montant total payé, en nombre (ex. « 1 007,02 € » → 1007.02). */
 function total_(lignes) {
   const montant = /(?:[€$£]\s?\d[\d\s.,]*\d|\d[\d\s.,]*\d?\s?(?:€|EUR|USD|GBP|\$|£))/i;
-  for (let i = 0; i < lignes.length; i++) {
-    if (!/\b(total|montant|amount|payé|paid)\b/i.test(lignes[i])) continue;
-    const m = lignes[i].match(montant) || (lignes[i + 1] || '').match(montant);
-    if (m) return enNombre_(m[0]);
+  const libelles = [
+    /\b(order total|grand total|total (payé|à payer|ttc|paid)|montant total|total amount)\b/i,
+    /^total\b(?!\s*(fees|frais))/i,
+  ];
+  for (const libelle of libelles) {
+    for (let i = 0; i < lignes.length; i++) {
+      if (!libelle.test(lignes[i])) continue;
+      const m = lignes[i].match(montant) || (lignes[i + 1] || '').match(montant);
+      if (m) return enNombre_(m[0]);
+    }
   }
   return '';
 }
@@ -356,6 +372,22 @@ function nom_(lignes) {
       l.match(/^([A-Za-zÀ-ÿ' -]{2,40}):$/);
     if (m) return m[1].trim();
   }
+  return '';
+}
+
+/**
+ * INSTANT quand l'email dit que les billets sont en préparation et renvoie au
+ * compte (« go to My tickets > Orders in your StubHub account », « Mon compte ») :
+ * la commande est passée. L'autre email (« You will receive a further email… »)
+ * annonce le plus souvent une annulation : la case reste vide.
+ */
+function livraison_(texte) {
+  if (/further email from us|recevrez un autre e-?mail/i.test(texte)) return '';
+  if (
+    /\binstant/i.test(texte) ||
+    /preparing your tickets|go to my tickets|in your (stubhub|viagogo) account/i.test(texte) ||
+    /en train de préparer vos billets|sur mon compte/i.test(texte)
+  ) return 'INSTANT';
   return '';
 }
 

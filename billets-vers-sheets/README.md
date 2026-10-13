@@ -22,7 +22,7 @@ Un script Google Apps Script qui lit vos emails de confirmation de commande Viag
 | INFORMATIONS | Nom trouvé dans l'email |
 | ARGENT RECU? | `NON` |
 | NUM CC | 4 derniers chiffres de la carte, ou `Apple Pay` (`Google Pay`, `PayPal`) |
-| VIAGOGO SEND TICKET | `INSTANT` si l'email parle de livraison instantanée |
+| VIAGOGO SEND TICKET | `INSTANT` quand l'email dit que les billets sont en préparation et renvoie au compte (« StubHub account », « Mon compte »). Vide quand il annonce « a further email » (commande probablement annulée) |
 | RF LANCE | `NON` |
 
 La colonne jaune et LISTE restent vides, comme pour une commande qui vient d'être passée. Chaque nouvelle ligne reprend la mise en forme et les menus déroulants de la ligne du dessus.
