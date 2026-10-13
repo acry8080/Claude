@@ -214,7 +214,7 @@ function derniereLigneRemplie_(feuille, colonnes) {
 
 function analyserMessage_(message) {
   const objet = message.getSubject() || '';
-  const corps = (message.getPlainBody() || '').replace(/ /g, ' ');
+  const corps = (message.getPlainBody() || '').replace(/\u00a0/g, ' ');
   const lignes = corps
     // Les champs alignés sur une même ligne (« Section: 512   Row: 3 ») sont séparés.
     .split(/\r?\n|\t| {2,}/)
