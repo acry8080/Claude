@@ -46,3 +46,25 @@ Le script importe tout de suite les commandes de la dernière année, puis véri
 
 - **Les emails doivent arriver dans le Gmail du compte Google qui possède le Sheet.** Vos adresses « Masquer mon adresse e-mail » d'iCloud transfèrent les emails vers l'adresse choisie dans votre identifiant Apple. Si c'est votre Gmail, tout fonctionne. Si c'est une boîte iCloud, changez l'adresse de transfert (Réglages → [votre nom] → iCloud → Masquer mon adresse e-mail → Transférer à).
 - Les emails Viagogo et StubHub ne suivent pas tous le même format. Les champs sont donc lus « au mieux ». Une commande sans numéro de commande détectable n'est pas ajoutée. Si un champ reste vide de façon régulière, envoyez un exemple d'email (en masquant vos données personnelles) pour qu'on adapte la lecture.
+
+## Ventes Seatiks (facultatif)
+
+Toutes les 15 minutes, en même temps que l'import des achats, le script lit vos ventes Seatiks des 60 derniers jours grâce à l'API Seatiks, puis met à jour la ligne de la commande d'achat correspondante :
+
+| Colonne | Valeur |
+|---|---|
+| TICKETS VENDUS | `2/2`, ou `2/4` pour une vente partielle |
+| VENDU ? | `OUI` quand tous les billets de la ligne sont vendus |
+| PRIX VENTE | Le montant que Seatiks vous reverse (additionné si la commande est vendue en plusieurs fois) |
+| ORDER ID SEATIKS/TIXSTOCK | Le n° de la vente Seatiks |
+| LISTE | `Seatiks` |
+| ARGENT RECU? | `OUI` dès que Seatiks indique que la vente est payée |
+
+**Retrouver la bonne ligne.** Si vous écrivez le n° de commande Viagogo dans la **note interne** de l'annonce Seatiks, la correspondance est sûre à 100 %. Sinon, le script cherche une commande avec la même date d'événement, un mot du nom en commun, assez de billets pas encore vendus, et la même section si possible. S'il trouve plusieurs lignes possibles, ou aucune, il ne devine pas : la vente est notée dans l'onglet **Ventes à vérifier**. Une vente annulée après coup surligne la ligne en rouge, et elle est aussi notée dans cet onglet.
+
+**Installation.**
+1. Sur Seatiks, allez dans **Paramètres → Développeurs** et créez une clé avec **Lire les ventes** (et **Consulter les annonces** pour utiliser la note interne).
+2. Dans Apps Script, ouvrez **Paramètres du projet** (l'engrenage), puis **Propriétés du script** → **Ajouter une propriété**. Nom : `SEATIKS_API_KEY`. Valeur : votre clé. Enregistrez.
+3. Rechargez le Sheet, puis cliquez sur **Billets → Tester la connexion Seatiks**.
+
+Une clé de test (`stk_test_…`) ne voit que les ventes fictives du bac à sable Seatiks : elles iront dans **Ventes à vérifier**. Les vraies ventes arrivent avec une clé réelle (`stk_live_…`), une fois l'accès en direct accordé par Seatiks.

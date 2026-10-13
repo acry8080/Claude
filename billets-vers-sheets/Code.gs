@@ -45,6 +45,9 @@ function onOpen() {
     .addItem('Importer maintenant', 'importerBillets')
     .addItem('Activer l\'import automatique', 'installerDeclencheur')
     .addItem('Désactiver l\'import automatique', 'supprimerDeclencheur')
+    .addSeparator()
+    .addItem('Tester la connexion Seatiks', 'testerSeatiks')
+    .addItem('Importer les ventes Seatiks', 'importerVentesSeatiks')
     .addToUi();
 }
 
@@ -81,6 +84,12 @@ function importerBillets() {
     fils.forEach(function (fil) { fil.addLabel(libelle); });
 
     console.log(commandes.length + ' commande(s) ajoutée(s).');
+    // Puis les ventes : une panne de Seatiks ne bloque pas l'import des achats.
+    try {
+      importerVentesSeatiks_();
+    } catch (e) {
+      console.error(e.message);
+    }
     return commandes.length;
   } finally {
     verrou.releaseLock();
@@ -439,4 +448,281 @@ function carte_(texte, lignes) {
 function adresse_(destinataire) {
   const m = destinataire.match(/[^\s<>,"]+@[^\s<>,"]+/);
   return m ? m[0] : destinataire;
+}
+
+// --- Ventes Seatiks ----------------------------------------------------------
+//
+// Toutes les 15 minutes (avec l'import des achats), le script lit les ventes des
+// 60 derniers jours sur l'API Seatiks et met à jour la ligne de la commande :
+// TICKETS VENDUS, VENDU ?, PRIX VENTE, ORDER ID SEATIKS/TIXSTOCK, LISTE, ARGENT RECU?.
+// La clé API se met dans Paramètres du projet → Propriétés du script, sous le nom
+// SEATIKS_API_KEY. Elle n'a besoin que de l'autorisation « Lire les ventes ».
+
+const SEATIKS = {
+  url: 'https://api.seatiks.com/v1',
+  propriete: 'SEATIKS_API_KEY',
+  joursRecherche: 60,
+  ongletAVerifier: 'Ventes à vérifier',
+  couleurAnnulee: '#ea9999',
+};
+
+function cleSeatiks_() {
+  return PropertiesService.getScriptProperties().getProperty(SEATIKS.propriete);
+}
+
+function appelSeatiks_(chemin) {
+  const reponse = UrlFetchApp.fetch(SEATIKS.url + chemin, {
+    headers: { Authorization: 'Bearer ' + cleSeatiks_() },
+    muteHttpExceptions: true,
+  });
+  const corps = JSON.parse(reponse.getContentText() || '{}');
+  if (reponse.getResponseCode() >= 300) {
+    const e = corps.error || {};
+    throw new Error('Seatiks ' + reponse.getResponseCode() + ' ' + (e.code || '') + ' : ' + (e.message || ''));
+  }
+  return corps;
+}
+
+/** Menu « Tester la connexion Seatiks » : vérifie la clé et ses autorisations. */
+function testerSeatiks() {
+  let message;
+  if (!cleSeatiks_()) {
+    message = 'Aucune clé : ajoutez SEATIKS_API_KEY dans Paramètres du projet → Propriétés du script.';
+  } else {
+    try {
+      const moi = appelSeatiks_('/me');
+      const scopes = moi.scopes || [];
+      message = 'Connexion Seatiks OK (mode ' + (moi.mode === 'live' ? 'réel' : 'test') + ').' +
+        (scopes.indexOf('sales:read') < 0 ? ' Il manque l\'autorisation « Lire les ventes » sur la clé.' : '');
+    } catch (e) {
+      message = 'Connexion Seatiks impossible : ' + e.message;
+    }
+  }
+  console.log(message);
+  try { SpreadsheetApp.getUi().alert(message); } catch (e) { /* lancé depuis l'éditeur */ }
+}
+
+/** Menu « Importer les ventes Seatiks ». */
+function importerVentesSeatiks() {
+  const verrou = LockService.getScriptLock();
+  if (!verrou.tryLock(30000)) return 0;
+  try {
+    return importerVentesSeatiks_();
+  } finally {
+    verrou.releaseLock();
+  }
+}
+
+function importerVentesSeatiks_() {
+  if (!cleSeatiks_()) return 0;
+  const feuille = obtenirFeuille_();
+  const colonnes = lireEnTetes_(feuille);
+  const tz = feuille.getParent().getSpreadsheetTimeZone();
+  const proprietes = PropertiesService.getScriptProperties();
+  const notees = proprietes.getProperties();
+  let ajoutees = 0;
+
+  ventesSeatiks_().reverse().forEach(function (v) { // plus anciennes d'abord
+    const cle = 'seatiks_' + v.id;
+    const deja = notees[cle] ? JSON.parse(notees[cle]) : null;
+    const annulee = /^cancelled/.test(v.status);
+
+    if (!deja) {
+      if (annulee) return; // annulée avant d'avoir été notée : rien à faire
+      const lignes = lireLignes_(feuille, colonnes);
+      const choix = ligneParNote_(lignes, v) || trouverLigne_(lignes, v, tz);
+      if (!choix.ligne) {
+        aVerifier_(feuille, v, choix.raison);
+        proprietes.setProperty(cle, JSON.stringify({ aVerifier: true }));
+        return;
+      }
+      appliquerVente_(feuille, colonnes, choix.ligne, v);
+      proprietes.setProperty(cle, JSON.stringify({ order: choix.orderId, paye: !!v.is_paid }));
+      ajoutees++;
+      return;
+    }
+
+    // Vente déjà notée : suivre le paiement et les annulations.
+    if (deja.aVerifier || deja.annulee) return;
+    const ligne = ligneDeCommande_(feuille, colonnes, deja.order);
+    if (!ligne) return;
+    if (v.is_paid && !deja.paye) {
+      mettreCellule_(feuille, colonnes, ligne, 'ARGENT RECU?', 'OUI');
+      deja.paye = true;
+    }
+    if (annulee) {
+      feuille.getRange(ligne, 1, 1, feuille.getLastColumn()).setBackground(SEATIKS.couleurAnnulee);
+      aVerifier_(feuille, v, 'Vente annulée sur Seatiks : ligne ' + ligne + ' surlignée en rouge, à corriger à la main.');
+      deja.annulee = true;
+    }
+    proprietes.setProperty(cle, JSON.stringify(deja));
+  });
+
+  console.log(ajoutees + ' vente(s) Seatiks ajoutée(s).');
+  return ajoutees;
+}
+
+function ventesSeatiks_() {
+  const depuis = new Date(Date.now() - SEATIKS.joursRecherche * 864e5).toISOString();
+  const ventes = [];
+  let curseur = '';
+  do {
+    const page = appelSeatiks_(
+      '/sales?limit=200&created_since=' + encodeURIComponent(depuis) +
+      (curseur ? '&cursor=' + encodeURIComponent(curseur) : '')
+    );
+    ventes.push.apply(ventes, page.data || []);
+    curseur = page.has_more ? page.next_cursor : '';
+  } while (curseur);
+  return ventes;
+}
+
+/** Les lignes du tableau, avec ce qu'il faut pour reconnaître une commande. */
+function lireLignes_(feuille, colonnes) {
+  const n = feuille.getLastRow();
+  if (n < 2) return [];
+  const plage = feuille.getRange(2, 1, n - 1, feuille.getLastColumn());
+  const affiche = plage.getDisplayValues();
+  const valeurs = plage.getValues();
+  const bloc = titreQui_(colonnes, /BLOC/);
+  return affiche.map(function (r, i) {
+    const cellule = function (titre) { return titre && colonnes[titre] ? r[colonnes[titre] - 1] : ''; };
+    const vendus = cellule('TICKETS VENDUS').match(/(\d+)\s*\/\s*(\d+)/);
+    return {
+      ligne: i + 2,
+      evenement: r[0],
+      date: colonnes['DATE'] ? valeurs[i][colonnes['DATE'] - 1] : '',
+      places: cellule('PLACES') + ' ' + cellule(bloc),
+      orderId: cellule('ORDER ID VIAGOGO').trim(),
+      vendus: vendus ? Number(vendus[1]) : 0,
+      total: vendus ? Number(vendus[2]) : 0,
+    };
+  });
+}
+
+/**
+ * Le plus sûr : le n° de commande Viagogo écrit dans la note interne de la
+ * vente ou de l'annonce Seatiks. Lire l'annonce demande « Consulter les annonces ».
+ */
+function ligneParNote_(lignes, v) {
+  let notes = v.internal_note || '';
+  if (v.listing_id) {
+    try {
+      notes += ' ' + (appelSeatiks_('/listings/' + encodeURIComponent(v.listing_id)).internal_note || '');
+    } catch (e) { /* clé sans « Consulter les annonces » : on s'en passe */ }
+  }
+  const nombres = notes.match(/\d{6,}/g) || [];
+  const l = lignes.filter(function (l) { return l.orderId && nombres.indexOf(l.orderId) >= 0; })[0];
+  return l ? { ligne: l.ligne, orderId: l.orderId } : null;
+}
+
+/**
+ * La ligne d'achat qui correspond à une vente : même date d'événement, au moins
+ * un mot du nom en commun, assez de billets pas encore vendus. La section
+ * départage. Plusieurs lignes ex aequo ou aucune : la vente est mise de côté.
+ */
+function trouverLigne_(lignes, v, tz) {
+  const ev = v.event || {};
+  const jour = ev.start_date ? jourIso_(new Date(ev.start_date), tz) : '';
+  const mots = motsCles_(ev.name);
+  const section = motsCles_(v.section).filter(function (m) { return /\d/.test(m); });
+  let meilleur = 0;
+  let candidates = [];
+  lignes.forEach(function (l) {
+    if (!l.orderId || !l.total || l.total - l.vendus < (v.quantity || 1)) return;
+    if (jour && jourIso_(l.date, tz) !== jour) return;
+    const communs = motsCles_(l.evenement).filter(function (m) { return mots.indexOf(m) >= 0; }).length;
+    if (!communs) return;
+    const places = motsCles_(l.places);
+    const score = communs + (section.some(function (m) { return places.indexOf(m) >= 0; }) ? 10 : 0);
+    if (score > meilleur) {
+      meilleur = score;
+      candidates = [l];
+    } else if (score === meilleur) {
+      candidates.push(l);
+    }
+  });
+  if (candidates.length === 1) return { ligne: candidates[0].ligne, orderId: candidates[0].orderId };
+  return {
+    raison: candidates.length
+      ? 'Plusieurs commandes possibles (lignes ' + candidates.map(function (l) { return l.ligne; }).join(', ') + ')'
+      : 'Aucune commande trouvée avec la même date, le même événement et des billets disponibles',
+  };
+}
+
+function appliquerVente_(feuille, colonnes, ligne, v) {
+  const lire = function (titre) {
+    return colonnes[titre] ? feuille.getRange(ligne, colonnes[titre]).getDisplayValue().trim() : '';
+  };
+  const m = lire('TICKETS VENDUS').match(/(\d+)\s*\/\s*(\d+)/);
+  const vendus = (m ? Number(m[1]) : 0) + (v.quantity || 0);
+  const total = m ? Number(m[2]) : v.quantity;
+  mettreCellule_(feuille, colonnes, ligne, 'TICKETS VENDUS', vendus + '/' + total);
+  if (vendus >= total) mettreCellule_(feuille, colonnes, ligne, 'VENDU ?', 'OUI');
+
+  // PRIX VENTE = ce que Seatiks vous reverse ; additionné si la commande est vendue en plusieurs fois.
+  const montant = v.payout && v.payout.total_amount;
+  if (montant != null && colonnes['PRIX VENTE']) {
+    const cellule = feuille.getRange(ligne, colonnes['PRIX VENTE']);
+    const avant = cellule.getValue();
+    cellule.setValue((typeof avant === 'number' ? avant : 0) + montant);
+    const symbole = { USD: '$', GBP: '£' }[v.payout.currency];
+    cellule.setNumberFormat(symbole ? '"' + symbole + '"#,##0.00' : '#,##0.00');
+  }
+
+  const ref = v.short_id || v.id;
+  const avantRef = lire('ORDER ID SEATIKS/TIXSTOCK');
+  mettreCellule_(feuille, colonnes, ligne, 'ORDER ID SEATIKS/TIXSTOCK',
+    !avantRef || avantRef === '//' ? ref : avantRef + ', ' + ref);
+  mettreCellule_(feuille, colonnes, ligne, 'LISTE', 'Seatiks');
+  if (v.is_paid) mettreCellule_(feuille, colonnes, ligne, 'ARGENT RECU?', 'OUI');
+}
+
+function mettreCellule_(feuille, colonnes, ligne, titre, valeur) {
+  if (colonnes[titre]) feuille.getRange(ligne, colonnes[titre]).setValue(valeur);
+}
+
+function ligneDeCommande_(feuille, colonnes, orderId) {
+  const n = feuille.getLastRow();
+  if (!orderId || n < 2) return 0;
+  const ids = feuille.getRange(2, colonnes['ORDER ID VIAGOGO'], n - 1, 1).getDisplayValues();
+  for (let i = 0; i < ids.length; i++) if (ids[i][0].trim() === orderId) return i + 2;
+  return 0;
+}
+
+/** Note une vente à traiter à la main dans l'onglet « Ventes à vérifier ». */
+function aVerifier_(feuille, v, raison) {
+  const classeur = feuille.getParent();
+  let onglet = classeur.getSheetByName(SEATIKS.ongletAVerifier);
+  if (!onglet) {
+    onglet = classeur.insertSheet(SEATIKS.ongletAVerifier);
+    onglet.appendRow(['Noté le', 'Site', 'N° vente', 'Événement', 'Date', 'Section', 'Rang', 'Quantité', 'Montant', 'Raison']);
+    onglet.setFrozenRows(1);
+    onglet.getRange(1, 1, 1, 10).setFontWeight('bold');
+  }
+  const ev = v.event || {};
+  onglet.appendRow([
+    new Date(), 'Seatiks', v.short_id || v.id, ev.name || '', ev.start_date ? new Date(ev.start_date) : '',
+    v.section || '', v.row || '', v.quantity || '',
+    v.payout && v.payout.total_amount != null ? v.payout.total_amount + ' ' + (v.payout.currency || '') : '',
+    raison,
+  ]);
+}
+
+/** « 2026-10-17 » pour une date, ou une date affichée « 17/10/2026 ». */
+function jourIso_(d, tz) {
+  if (d instanceof Date && !isNaN(d)) return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  const m = String(d || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return m ? m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2) : '';
+}
+
+const MOTS_VIDES_ = ['vs', 'fc', 'sv', 'the', 'and', 'les', 'des', 'club', 'stadium', 'stade', 'tour'];
+
+/** Mots en minuscules sans accents : « 1. FC Köln » → ['koln']. */
+function motsCles_(texte) {
+  return String(texte || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(function (m) { return (m.length >= 3 || /\d/.test(m)) && MOTS_VIDES_.indexOf(m) < 0; });
 }
