@@ -512,7 +512,8 @@ function testerSeatiks() {
     }
   }
   console.log(message);
-  try { SpreadsheetApp.getUi().alert(message); } catch (e) { /* lancé depuis l'éditeur */ }
+  // Petit encadré en bas du Sheet : contrairement à une fenêtre, il ne bloque pas le script.
+  SpreadsheetApp.getActiveSpreadsheet().toast(message, 'Seatiks', 10);
 }
 
 /** Menu « Importer les ventes Seatiks ». */
