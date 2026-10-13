@@ -305,6 +305,9 @@ function places_(lignes, quantite) {
       quantite
     );
   }
+  // Autre libellé (« Catégorie 2 », « Fosse »…) : repris tel quel, sans « (2 Billets) ».
+  const libre = billets.replace(/\(\s*\d+\s*(billets?|tickets?)\s*\)/i, '').replace(/[\s,]+$/, '');
+  if (libre) return (quantite ? 'x' + quantite + ' ' : '') + libre;
   const section = valeurApres_(lignes, /^(section|secteur|bloc|tribune|catégorie|category|zone)\b/i);
   const rang = valeurApres_(lignes, /^(rang(ée)?|row)\b/i);
   const sieges = valeurApres_(lignes, /^(si[eè]ges?|places?|seats?)\b/i);
