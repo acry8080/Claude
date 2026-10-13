@@ -8,7 +8,7 @@ Un script Google Apps Script qui lit vos emails de confirmation de commande Viag
 |---|---|
 | A (match) | Nom de l'événement |
 | VENDU ? | `NON` |
-| PRIX ACHAT | Total payé, en nombre (ex. `1007.02`) |
+| PRIX ACHAT | Total payé, en nombre (ex. `1007.02`), affiché en `$` pour les commandes en dollars |
 | PRIX VENTE | `//` |
 | TICKETS VENDUS | `0/` + nombre de billets (ex. `0/2`) |
 | DATE | Date de l'événement |
@@ -25,7 +25,7 @@ Un script Google Apps Script qui lit vos emails de confirmation de commande Viag
 | VIAGOGO SEND TICKET | `INSTANT` quand l'email dit que les billets sont en préparation et renvoie au compte (« StubHub account », « Mon compte »). Vide quand il annonce « a further email » (commande probablement annulée) |
 | RF LANCE | `NON` |
 
-La colonne jaune et LISTE restent vides, comme pour une commande qui vient d'être passée. Chaque nouvelle ligne reprend la mise en forme et les menus déroulants de la ligne du dessus.
+La colonne jaune et LISTE restent vides, comme pour une commande qui vient d'être passée. Une commande probablement annulée (email StubHub « You will receive a further email… ») est surlignée en orange. Chaque nouvelle ligne reprend la mise en forme et les menus déroulants de la ligne du dessus.
 
 Les colonnes sont retrouvées par leur titre en ligne 1. Vous pouvez donc les déplacer, mais ne les renommez pas.
 

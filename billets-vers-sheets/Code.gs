@@ -18,6 +18,9 @@ const CONFIG = {
   // Nom de l'onglet du tableau. Vide = premier onglet du classeur.
   nomFeuille: '',
   libelleGmail: 'Billets importés',
+  // Commande sans le lien « StubHub account » (email « a further email ») :
+  // probablement annulée, la ligne est surlignée de cette couleur.
+  couleurAnnulationProbable: '#f9cb9c',
   intervalleMinutes: 15,
   // Emails des deux plateformes pas encore traités. Seuls ceux qui ont un numéro
   // de commande et un total (les confirmations d'achat) deviennent une ligne.
@@ -130,14 +133,30 @@ function ajouterLigne_(feuille, colonnes, c) {
   mettre('NUM CC', /^\d{4}$/.test(c.carte) ? Number(c.carte) : c.carte);
   mettre('VIAGOGO SEND TICKET', c.livraison);
 
-  // Même mise en forme et mêmes menus déroulants que la ligne du dessus.
+  // Même mise en forme et mêmes menus déroulants qu'une ligne du dessus non surlignée.
+  const cible = feuille.getRange(ligne, 1, 1, nbCol);
   if (ligne > 2) {
-    const modele = feuille.getRange(ligne - 1, 1, 1, nbCol);
-    const cible = feuille.getRange(ligne, 1, 1, nbCol);
+    const modele = feuille.getRange(ligneModele_(feuille, ligne), 1, 1, nbCol);
     modele.copyTo(cible, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
     modele.copyTo(cible, SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
   }
-  feuille.getRange(ligne, 1, 1, nbCol).setValues([valeurs]);
+  cible.setValues([valeurs]);
+
+  if (colonnes['PRIX ACHAT']) {
+    feuille.getRange(ligne, colonnes['PRIX ACHAT'])
+      .setNumberFormat(c.devise === '$' ? '"$"#,##0.00' : '#,##0.00');
+  }
+  if (c.annulationProbable) cible.setBackground(CONFIG.couleurAnnulationProbable);
+}
+
+/** Ligne la plus proche au-dessus dont la colonne A n'est pas colorée. */
+function ligneModele_(feuille, ligne) {
+  const debut = Math.max(2, ligne - 50);
+  const fonds = feuille.getRange(debut, 1, ligne - debut, 1).getBackgrounds();
+  for (let i = fonds.length - 1; i >= 0; i--) {
+    if (fonds[i][0] === '#ffffff') return debut + i;
+  }
+  return ligne - 1;
 }
 
 /** Premier titre de colonne qui correspond, ou '' (et la colonne est ignorée). */
@@ -209,6 +228,8 @@ function analyserMessage_(message) {
     orderId: numeroCommande_(texte) || numeroCommande_(objet),
     evenement: evenement_(objet, lignes),
     prix: total_(lignes),
+    devise: devise_(lignes),
+    annulationProbable: /further email from us|recevrez un autre e-?mail/i.test(texte),
     quantite: quantite,
     dateEvenement: dateEvenement_(texte),
     places: places_(lignes, quantite),
@@ -308,6 +329,14 @@ function total_(lignes) {
     }
   }
   return '';
+}
+
+/** '$' quand le total est en dollars, sinon '' (euros, format de la colonne). */
+function devise_(lignes) {
+  const total = lignes.filter(function (l) { return /total/i.test(l) && !/fees|frais/i.test(l); });
+  const i = lignes.indexOf(total[total.length - 1]);
+  const zone = i >= 0 ? lignes[i] + ' ' + (lignes[i + 1] || '') : '';
+  return /\$|USD/.test(zone) ? '$' : '';
 }
 
 function enNombre_(s) {
