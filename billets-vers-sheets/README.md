@@ -17,6 +17,7 @@ Un script Google Apps Script qui lit vos emails de confirmation de commande Viag
 | COMMANDE VGG? | `OUI` |
 | REMBOURSE ? | `NON` |
 | PLACES | `section / rang / sièges` (ex. `B1 / 25 / 5-6`), ou `x4 GA` quand il n'y a pas de rang |
+| BLOC / RANG (facultatives) | Le bloc et le rang, dans des colonnes « BLOC » et « RANG » ou dans une seule colonne « BLOC ET RANG » |
 | MAIL | Adresse qui a reçu l'email (votre adresse iCloud) |
 | INFORMATIONS | Nom trouvé dans l'email |
 | ARGENT RECU? | `NON` |

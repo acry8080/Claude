@@ -116,7 +116,15 @@ function ajouterLigne_(feuille, colonnes, c) {
   mettre('TICKETS VENDUS', c.quantite ? '0/' + c.quantite : '');
   mettre('DATE', c.dateEvenement);
   mettre('ORDER ID VIAGOGO', isNaN(c.orderId) ? c.orderId : Number(c.orderId));
-  mettre('PLACES', c.places);
+  mettre('PLACES', c.places.texte);
+  // Colonnes facultatives : une seule « BLOC ET RANG », ou « BLOC » et « RANG » séparées.
+  const blocEtRang = titreQui_(colonnes, /BLOC.*RANG|RANG.*BLOC/);
+  if (blocEtRang) {
+    mettre(blocEtRang, [c.places.bloc, c.places.rang].filter(Boolean).join(' / '));
+  } else {
+    mettre(titreQui_(colonnes, /^BLOC$/), c.places.bloc);
+    mettre(titreQui_(colonnes, /^RANG(ÉE|EE)?$/), c.places.rang);
+  }
   mettre('MAIL', c.mail);
   mettre('INFORMATIONS', c.nom);
   mettre('NUM CC', c.carte ? Number(c.carte) : '');
@@ -130,6 +138,11 @@ function ajouterLigne_(feuille, colonnes, c) {
     modele.copyTo(cible, SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
   }
   feuille.getRange(ligne, 1, 1, nbCol).setValues([valeurs]);
+}
+
+/** Premier titre de colonne qui correspond, ou '' (et la colonne est ignorée). */
+function titreQui_(colonnes, re) {
+  return Object.keys(colonnes).filter(function (t) { return t && re.test(t); })[0] || null;
 }
 
 function obtenirFeuille_() {
@@ -307,16 +320,19 @@ function places_(lignes, quantite) {
   }
   // Autre libellé (« Catégorie 2 », « Fosse »…) : repris tel quel, sans « (2 Billets) ».
   const libre = billets.replace(/\(\s*\d+\s*(billets?|tickets?)\s*\)/i, '').replace(/[\s,]+$/, '');
-  if (libre) return (quantite ? 'x' + quantite + ' ' : '') + libre;
+  if (libre) return assemblerPlaces_(libre, '', '', quantite);
   const section = valeurApres_(lignes, /^(section|secteur|bloc|tribune|catégorie|category|zone)\b/i);
   const rang = valeurApres_(lignes, /^(rang(ée)?|row)\b/i);
   const sieges = valeurApres_(lignes, /^(si[eè]ges?|places?|seats?)\b/i);
   return assemblerPlaces_(section, rang, sieges, quantite);
 }
 
+/** { texte: pour PLACES, bloc, rang } */
 function assemblerPlaces_(section, rang, sieges, quantite) {
-  if (!rang && !sieges) return section ? (quantite ? 'x' + quantite + ' ' : '') + section : '';
-  return [section, rang, plageSieges_(sieges)].filter(Boolean).join(' / ');
+  const texte = !rang && !sieges
+    ? (section ? (quantite ? 'x' + quantite + ' ' : '') + section : '')
+    : [section, rang, plageSieges_(sieges)].filter(Boolean).join(' / ');
+  return { texte: texte, bloc: section, rang: rang };
 }
 
 /** « 39, 40 » → « 39-40 » quand les sièges se suivent. */
