@@ -19,11 +19,9 @@ const CONFIG = {
   nomFeuille: '',
   libelleGmail: 'Billets importés',
   intervalleMinutes: 15,
-  // Emails de commande des deux plateformes (pas les newsletters), pas encore traités.
-  recherche:
-    'from:(viagogo OR stubhub) ' +
-    'subject:(commande OR order OR confirmation OR confirmé OR confirmée OR confirmed OR achat OR purchase) ' +
-    '-label:"Billets importés" newer_than:1y',
+  // Emails des deux plateformes pas encore traités. Seuls ceux qui ont un numéro
+  // de commande et un total (les confirmations d'achat) deviennent une ligne.
+  recherche: 'from:(viagogo OR stubhub) -label:"Billets importés" newer_than:1y',
 };
 
 // Valeurs mises par défaut sur une nouvelle commande, comme dans le tableau.
@@ -61,18 +59,20 @@ function importerBillets() {
       GmailApp.getUserLabelByName(CONFIG.libelleGmail) ||
       GmailApp.createLabel(CONFIG.libelleGmail);
 
-    const commandes = [];
+    const lues = [];
     const fils = GmailApp.search(CONFIG.recherche, 0, 100);
     fils.forEach(function (fil) {
-      fil.getMessages().forEach(function (message) {
-        const c = analyserMessage_(message);
-        if (!c.orderId || commandesConnues.has(c.orderId)) return;
-        commandesConnues.add(c.orderId);
-        commandes.push(c);
-      });
+      fil.getMessages().forEach(function (message) { lues.push(analyserMessage_(message)); });
     });
 
-    commandes.sort(function (a, b) { return a.recuLe - b.recuLe; });
+    // Du plus ancien au plus récent : pour une commande, c'est la confirmation
+    // d'achat qui compte, pas les emails envoyés ensuite.
+    lues.sort(function (a, b) { return a.recuLe - b.recuLe; });
+    const commandes = lues.filter(function (c) {
+      if (!c.orderId || c.prix === '' || commandesConnues.has(c.orderId)) return false;
+      commandesConnues.add(c.orderId);
+      return true;
+    });
     commandes.forEach(function (c) { ajouterLigne_(feuille, colonnes, c); });
     // Marqués seulement une fois écrits : en cas d'erreur, ils seront repris.
     fils.forEach(function (fil) { fil.addLabel(libelle); });
@@ -193,7 +193,7 @@ function analyserMessage_(message) {
   const quantite = quantite_(texte);
   return {
     recuLe: message.getDate(),
-    orderId: numeroCommande_(objet + '\n' + texte),
+    orderId: numeroCommande_(texte) || numeroCommande_(objet),
     evenement: evenement_(objet, lignes),
     prix: total_(lignes),
     quantite: quantite,
@@ -222,7 +222,7 @@ function valeurApres_(lignes, libelle) {
 
 function numeroCommande_(texte) {
   const m = texte.match(
-    /(?:n[°o]\.?\s*(?:de\s*)?commande|commande\s*(?:n[°o]\.?)?|order\s*(?:number|no\.?|id)?|r[ée]f[ée]rence)\s*[:#]?\s*#?\s*([A-Z0-9][A-Z0-9-]{4,})/i
+    /(?:num[ée]ro\s*de\s*commande|n[°o]\.?\s*(?:de\s*)?commande|commande\s*(?:n[°o]\.?)?|order\s*(?:number|no\.?|id)?|r[ée]f[ée]rence)\s*[:#]?\s*#?\s*((?=[A-Z0-9-]*\d)[A-Z0-9][A-Z0-9-]{4,})\b/i
   );
   return m ? m[1] : '';
 }
@@ -295,15 +295,30 @@ function enNombre_(s) {
 
 /** « 135 / 27 / 39-40 », ou « x4 L GA » quand il n'y a ni rang ni siège. */
 function places_(lignes, quantite) {
+  const billets = valeurApres_(lignes, /^billets\s*:/i);
+  if (/\b(bloc|section|secteur|rang|row)\b/i.test(billets)) {
+    const champ = function (re) { const m = billets.match(re); return m ? m[1].trim() : ''; };
+    return assemblerPlaces_(
+      champ(/\b(?:bloc|section|secteur|tribune|zone)\s+([^,(]+)/i),
+      champ(/\b(?:rang(?:ée)?|row)\s+([^,(]+)/i),
+      champ(/\b(?:places?|si[eè]ges?|seats?)\s+([^,(]+)/i),
+      quantite
+    );
+  }
   const section = valeurApres_(lignes, /^(section|secteur|bloc|tribune|catégorie|category|zone)\b/i);
   const rang = valeurApres_(lignes, /^(rang(ée)?|row)\b/i);
   const sieges = valeurApres_(lignes, /^(si[eè]ges?|places?|seats?)\b/i);
+  return assemblerPlaces_(section, rang, sieges, quantite);
+}
+
+function assemblerPlaces_(section, rang, sieges, quantite) {
   if (!rang && !sieges) return section ? (quantite ? 'x' + quantite + ' ' : '') + section : '';
   return [section, rang, plageSieges_(sieges)].filter(Boolean).join(' / ');
 }
 
 /** « 39, 40 » → « 39-40 » quand les sièges se suivent. */
 function plageSieges_(s) {
+  s = s.replace(/\s*-\s*/g, '-');
   const n = (s.match(/\d+/g) || []).map(Number);
   if (n.length < 2) return s;
   for (let i = 1; i < n.length; i++) if (n[i] !== n[i - 1] + 1) return s;
@@ -313,11 +328,13 @@ function plageSieges_(s) {
 function nom_(lignes) {
   const champ = valeurApres_(
     lignes,
-    /^(nom du titulaire|titulaire|nom sur le billet|nom|ticket holder|name on ticket|attendee|name)\b/i
+    /^(nom d[eu] client|nom du titulaire|titulaire|nom sur le billet|nom|customer name|ticket holder|name on ticket|attendee|name)\b/i
   );
   if (champ) return champ;
   for (const l of lignes.slice(0, 15)) {
-    const m = l.match(/^(?:bonjour|hello|hi|dear|cher|chère)\s+([^,!]+)[,!]?$/i);
+    const m =
+      l.match(/^(?:bonjour|hello|hi|dear|cher|chère)\s+([^,!:]+)[,!:]?$/i) ||
+      l.match(/^([A-Za-zÀ-ÿ' -]{2,40}):$/);
     if (m) return m[1].trim();
   }
   return '';
