@@ -68,3 +68,24 @@ Toutes les 15 minutes, en même temps que l'import des achats, le script lit vos
 3. Rechargez le Sheet, puis cliquez sur **Billets → Tester la connexion Seatiks**.
 
 Une clé de test (`stk_test_…`) ne voit que les ventes fictives du bac à sable Seatiks : elles iront dans **Ventes à vérifier**. Les vraies ventes arrivent avec une clé réelle (`stk_live_…`), une fois l'accès en direct accordé par Seatiks.
+
+## Annonces Seatiks
+
+Écrivez un prix **par billet**, en euros, dans la colonne **PRIX LISTING** : l'annonce part aussitôt sur Seatiks, avec ces réglages :
+- type de billet **E-ticket** ;
+- billets vendus **tous ensemble** (All together) ;
+- publiée sur **toutes les plateformes** ;
+- quantité = billets pas encore vendus (TICKETS VENDUS) ;
+- rang et premier siège repris de PLACES, ou sièges masqués s'il n'y a pas de rang ;
+- n° de commande Viagogo écrit dans la **note interne**, pour que la vente retombe toujours sur la bonne ligne.
+
+Changer le prix met l'annonce à jour. Vider la case retire l'annonce de la vente, et remettre un prix la republie. Le résultat s'affiche en **note sur la case** : survolez-la pour le lire. LISTE passe à `Seatiks`.
+
+Si l'événement ou la section ne sont pas trouvés sur Seatiks, rien n'est publié : la note l'explique et donne des exemples de sections. Ajoutez alors une colonne **SECTION SEATIKS**, écrivez-y le nom exact de la section Seatiks, puis remettez le prix.
+
+Conditions côté Seatiks :
+- la clé doit avoir **Lire les événements**, **Consulter les annonces**, **Créer, mettre à jour et supprimer des annonces** et **Lire les ventes** ;
+- l'**accès en direct** doit être accordé ;
+- le compte doit avoir **au moins 5 ventes**. Avant ça, Seatiks exige une preuve d'achat que l'API ne peut pas envoyer : il faut lister depuis le site.
+
+Après avoir recopié le script, relancez une fois `installerDeclencheur` : c'est lui qui active la surveillance de la colonne PRIX LISTING.

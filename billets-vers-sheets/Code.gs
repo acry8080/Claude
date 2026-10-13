@@ -96,19 +96,26 @@ function importerBillets() {
   }
 }
 
-/** Lance importerBillets toutes les CONFIG.intervalleMinutes minutes. */
+/**
+ * Lance importerBillets toutes les CONFIG.intervalleMinutes minutes, et
+ * surModification à chaque modification du Sheet (colonne PRIX LISTING).
+ */
 function installerDeclencheur() {
   supprimerDeclencheur();
   ScriptApp.newTrigger('importerBillets')
     .timeBased()
     .everyMinutes(CONFIG.intervalleMinutes)
     .create();
+  ScriptApp.newTrigger('surModification')
+    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+    .onEdit()
+    .create();
   importerBillets();
 }
 
 function supprimerDeclencheur() {
   ScriptApp.getProjectTriggers()
-    .filter(function (t) { return t.getHandlerFunction() === 'importerBillets'; })
+    .filter(function (t) { return ['importerBillets', 'surModification'].indexOf(t.getHandlerFunction()) >= 0; })
     .forEach(function (t) { ScriptApp.deleteTrigger(t); });
 }
 
@@ -470,17 +477,23 @@ function cleSeatiks_() {
   return PropertiesService.getScriptProperties().getProperty(SEATIKS.propriete);
 }
 
-function appelSeatiks_(chemin) {
-  const reponse = UrlFetchApp.fetch(SEATIKS.url + chemin, {
+function appelSeatiks_(chemin, methode, corps) {
+  const options = {
+    method: methode || 'get',
     headers: { Authorization: 'Bearer ' + cleSeatiks_() },
     muteHttpExceptions: true,
-  });
-  const corps = JSON.parse(reponse.getContentText() || '{}');
+  };
+  if (corps) {
+    options.contentType = 'application/json';
+    options.payload = JSON.stringify(corps);
+  }
+  const reponse = UrlFetchApp.fetch(SEATIKS.url + chemin, options);
+  const json = JSON.parse(reponse.getContentText() || '{}');
   if (reponse.getResponseCode() >= 300) {
-    const e = corps.error || {};
+    const e = json.error || {};
     throw new Error('Seatiks ' + reponse.getResponseCode() + ' ' + (e.code || '') + ' : ' + (e.message || ''));
   }
-  return corps;
+  return json;
 }
 
 /** Menu « Tester la connexion Seatiks » : vérifie la clé et ses autorisations. */
@@ -725,4 +738,207 @@ function motsCles_(texte) {
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(function (m) { return (m.length >= 3 || /\d/.test(m)) && MOTS_VIDES_.indexOf(m) < 0; });
+}
+
+// --- Annonces Seatiks ---------------------------------------------------------
+//
+// Un prix écrit dans la colonne PRIX LISTING (prix par billet, en euros) crée
+// l'annonce sur Seatiks : E-ticket, billets vendus tous ensemble, toutes les
+// plateformes, n° de commande Viagogo en note interne. Changer le prix met
+// l'annonce à jour ; vider la case la retire de la vente. Le résultat s'affiche
+// en note sur la case (survolez-la). La clé doit avoir « Lire les événements »
+// et « Créer, mettre à jour et supprimer des annonces ».
+
+const ANNONCE = {
+  transfer_method: 'E-ticket',
+  split_type: 'All together',
+  price_currency: 'EUR',
+  // Pas de « platforms » : l'annonce est publiée sur toutes les plateformes.
+};
+
+/** Déclencheur « à la modification » installé par installerDeclencheur. */
+function surModification(e) {
+  const feuille = e.range.getSheet();
+  if (feuille.getSheetId() !== obtenirFeuille_().getSheetId()) return;
+  const colonnes = lireEnTetes_(feuille);
+  const col = colonnes['PRIX LISTING'];
+  if (!col || e.range.getColumn() > col || e.range.getLastColumn() < col) return;
+  const verrou = LockService.getScriptLock();
+  if (!verrou.tryLock(30000)) return;
+  try {
+    for (let ligne = Math.max(2, e.range.getRow()); ligne <= e.range.getLastRow(); ligne++) {
+      const cellule = feuille.getRange(ligne, col);
+      try {
+        cellule.setNote(gererAnnonce_(feuille, colonnes, ligne));
+      } catch (err) {
+        cellule.setNote('Erreur : ' + err.message);
+      }
+    }
+  } finally {
+    verrou.releaseLock();
+  }
+}
+
+/** Crée, met à jour ou retire l'annonce de la ligne. Renvoie le texte de la note. */
+function gererAnnonce_(feuille, colonnes, ligne) {
+  if (!cleSeatiks_()) return 'Pas de clé Seatiks : ajoutez SEATIKS_API_KEY dans les propriétés du script.';
+  const r = lireLignes_(feuille, colonnes).filter(function (l) { return l.ligne === ligne; })[0];
+  if (!r || !r.orderId) return 'Pas de n° de commande Viagogo sur cette ligne : rien n\'est listé.';
+
+  const valeur = feuille.getRange(ligne, colonnes['PRIX LISTING']).getValue();
+  const proprietes = PropertiesService.getScriptProperties();
+  const cle = 'annonce_' + r.orderId;
+  const annonce = JSON.parse(proprietes.getProperty(cle) || 'null');
+
+  // Case vidée : l'annonce est retirée de la vente.
+  if (valeur === '' || valeur === null) {
+    if (!annonce || !annonce.publiee) return '';
+    appelSeatiks_('/listings/' + annonce.id + '/unpublish', 'post');
+    annonce.publiee = false;
+    proprietes.setProperty(cle, JSON.stringify(annonce));
+    return 'Annonce retirée de la vente sur Seatiks. Remettez un prix pour la republier.';
+  }
+
+  const prix = typeof valeur === 'number' ? valeur : enNombre_(String(valeur));
+  if (!(prix > 0)) return 'Prix illisible : écrivez un nombre, par exemple 250.';
+
+  // Annonce déjà créée : nouveau prix, et republication si elle avait été retirée.
+  if (annonce) {
+    appelSeatiks_('/listings/' + annonce.id, 'patch', { price: prix });
+    if (!annonce.publiee) {
+      appelSeatiks_('/listings/' + annonce.id + '/publish', 'post');
+      annonce.publiee = true;
+      proprietes.setProperty(cle, JSON.stringify(annonce));
+    }
+    return 'Annonce Seatiks à jour : ' + prix + ' € par billet.';
+  }
+
+  // Nouvelle annonce.
+  const restants = r.total - r.vendus;
+  if (!(restants > 0)) return 'Plus aucun billet à vendre sur cette ligne (TICKETS VENDUS).';
+  const tz = feuille.getParent().getSpreadsheetTimeZone();
+  const ev = evenementSeatiks_(r, tz);
+  const places = decouperPlaces_(feuille, colonnes, ligne);
+  const forcee = titreQui_(colonnes, /^SECTION SEATIKS$/);
+  const section = sectionSeatiks_(ev.id, (forcee && feuille.getRange(ligne, colonnes[forcee]).getDisplayValue().trim()) || places.bloc);
+
+  const item = Object.assign({
+    event_id: ev.id,
+    section: section.key,
+    quantity: restants,
+    price: prix,
+    internal_note: 'Viagogo ' + r.orderId,
+    idempotency_key: 'vgg-' + r.orderId,
+  }, ANNONCE);
+  const rang = places.rang.replace(/[^A-Za-z0-9/-]/g, '').slice(0, 20);
+  if (rang) {
+    item.row = rang;
+    const siege = (places.sieges.match(/[A-Za-z0-9]+/) || [''])[0].slice(0, 10);
+    if (siege) item.first_seat = siege;
+  } else {
+    item.hide_seats = true;
+  }
+
+  const resultat = (appelSeatiks_('/listings', 'post', { listings: [item] }).data || [])[0] || {};
+  const id = resultat.id || (resultat.listing && resultat.listing.id);
+  if (['created', 'duplicate', 'pending_approval'].indexOf(resultat.status) >= 0) {
+    if (id) proprietes.setProperty(cle, JSON.stringify({ id: id, publiee: true }));
+    mettreCellule_(feuille, colonnes, ligne, 'LISTE', 'Seatiks');
+    if (resultat.status === 'pending_approval') {
+      return 'Annonce envoyée : Seatiks doit la valider. Remettez le même prix plus tard pour voir où elle en est.';
+    }
+    return 'Annonce créée sur Seatiks : ' + ev.name + ', section ' + section.name + ', ' +
+      restants + ' billet(s) à ' + prix + ' € (E-ticket, tous ensemble, toutes les plateformes).';
+  }
+  const err = resultat.error || {};
+  if (err.code === 'rejected') {
+    return 'Seatiks a refusé l\'annonce : ' + (err.message || '') +
+      ' Tant que le compte a moins de 5 ventes, il faut lister depuis le site Seatiks, avec la preuve d\'achat.';
+  }
+  return 'Seatiks a refusé l\'annonce : ' + (err.code || resultat.status || '') + ' ' + (err.message || '');
+}
+
+/** { bloc, rang, sieges } depuis les colonnes BLOC / RANG, sinon depuis PLACES. */
+function decouperPlaces_(feuille, colonnes, ligne) {
+  const lire = function (titre) {
+    return titre && colonnes[titre] ? feuille.getRange(ligne, colonnes[titre]).getDisplayValue().trim() : '';
+  };
+  const morceaux = lire('PLACES').replace(/^x\d+\s+/i, '').split(/\s+\/\s+/);
+  return {
+    bloc: lire(titreQui_(colonnes, /^BLOC$/)) || morceaux[0] || '',
+    rang: lire(titreQui_(colonnes, /^RANG(ÉE|EE)?$/)) || morceaux[1] || '',
+    sieges: morceaux[2] || '',
+  };
+}
+
+/** L'événement Seatiks du même jour qui a le plus de mots en commun avec le nom. */
+function evenementSeatiks_(r, tz) {
+  const jour = jourIso_(r.date, tz);
+  if (!jour) throw new Error('Date de l\'événement manquante ou illisible (colonne DATE).');
+  const debut = new Date(new Date(jour + 'T00:00:00Z').getTime() - 864e5).toISOString();
+  const fin = new Date(new Date(jour + 'T00:00:00Z').getTime() + 2 * 864e5).toISOString();
+  const mots = motsCles_(r.evenement);
+
+  let meilleur = 0;
+  let candidats = [];
+  let curseur = '';
+  let pages = 0;
+  do {
+    const page = appelSeatiks_('/events?listable=true&limit=100&date_from=' + encodeURIComponent(debut) +
+      '&date_to=' + encodeURIComponent(fin) + (curseur ? '&cursor=' + encodeURIComponent(curseur) : ''));
+    (page.data || []).forEach(function (ev) {
+      if (jourIso_(new Date(ev.start_date), ev.timezone || tz) !== jour) return;
+      const score = motsCles_(ev.name).filter(function (m) { return mots.indexOf(m) >= 0; }).length;
+      if (!score) return;
+      if (score > meilleur) {
+        meilleur = score;
+        candidats = [ev];
+      } else if (score === meilleur) {
+        candidats.push(ev);
+      }
+    });
+    curseur = page.has_more ? page.next_cursor : '';
+  } while (curseur && ++pages < 10);
+
+  if (candidats.length === 1) return candidats[0];
+  if (!candidats.length) throw new Error('Événement introuvable sur Seatiks le ' + jour.split('-').reverse().join('/') + ' : « ' + r.evenement + ' ».');
+  throw new Error('Plusieurs événements possibles sur Seatiks : ' + candidats.map(function (e) { return e.name; }).join(' / ') + '.');
+}
+
+/** La section Seatiks qui correspond au bloc (« 13C » → « Block 13C »). */
+function sectionSeatiks_(eventId, bloc) {
+  const sections = appelSeatiks_('/events/' + encodeURIComponent(eventId)).sections || [];
+  // Ici les mots courts comptent : « L GA », « A », « S4 ».
+  const norm = function (t) {
+    return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .split(/[^a-z0-9]+/).filter(Boolean).map(synonyme_)
+      .filter(function (m) { return MOTS_SECTION_.indexOf(m) < 0; });
+  };
+  const cherche = norm(bloc);
+  if (!cherche.length) throw new Error('Bloc vide : remplissez PLACES ou BLOC, ou la colonne SECTION SEATIKS.');
+
+  const exacte = sections.filter(function (sct) {
+    return sct.key === bloc || norm(sct.name).join(' ') === cherche.join(' ');
+  });
+  if (exacte.length === 1) return exacte[0];
+
+  const avecChiffres = cherche.filter(function (m) { return /\d/.test(m); });
+  const requis = avecChiffres.length ? avecChiffres : cherche;
+  const proches = sections.filter(function (sct) {
+    const mots = norm(sct.name + ' ' + (sct.category || ''));
+    return requis.every(function (m) { return mots.indexOf(m) >= 0; });
+  });
+  if (proches.length === 1) return proches[0];
+
+  const exemples = (proches.length ? proches : sections).slice(0, 8).map(function (sct) { return sct.name; }).join(', ');
+  throw new Error(
+    (proches.length ? 'Plusieurs sections Seatiks possibles pour « ' : 'Section introuvable sur Seatiks pour « ') + bloc + ' ». ' +
+    'Exemples : ' + exemples + '. Écrivez le nom exact dans une colonne SECTION SEATIKS, puis remettez le prix.'
+  );
+}
+
+const MOTS_SECTION_ = ['bloc', 'block', 'section', 'secteur', 'tribune', 'zone', 'sec', 'sect'];
+
+function synonyme_(m) {
+  return { categorie: 'category', cat: 'category', fosse: 'pit', pelouse: 'floor' }[m] || m;
 }
