@@ -49,7 +49,7 @@ Le script importe tout de suite les commandes de la dernière année, puis véri
 
 ## Ventes Seatiks (facultatif)
 
-Toutes les 15 minutes, en même temps que l'import des achats, le script lit vos ventes Seatiks des 60 derniers jours grâce à l'API Seatiks, puis met à jour la ligne de la commande d'achat correspondante :
+Toutes les 15 minutes, en même temps que l'import des achats, le script lit vos ventes Seatiks grâce à l'API Seatiks (celles faites depuis sa mise en route, sur 60 jours au plus), puis met à jour la ligne de la commande d'achat correspondante :
 
 | Colonne | Valeur |
 |---|---|

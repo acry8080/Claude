@@ -539,9 +539,15 @@ function importerVentesSeatiks_() {
   const tz = feuille.getParent().getSpreadsheetTimeZone();
   const proprietes = PropertiesService.getScriptProperties();
   const notees = proprietes.getProperties();
+  // Les ventes d'avant la mise en route ont déjà été notées à la main : on part d'aujourd'hui.
+  let depuis = notees.seatiks_depuis;
+  if (!depuis) {
+    depuis = new Date().toISOString();
+    proprietes.setProperty('seatiks_depuis', depuis);
+  }
   let ajoutees = 0;
 
-  ventesSeatiks_().reverse().forEach(function (v) { // plus anciennes d'abord
+  ventesSeatiks_(depuis).reverse().forEach(function (v) { // plus anciennes d'abord
     const cle = 'seatiks_' + v.id;
     const deja = notees[cle] ? JSON.parse(notees[cle]) : null;
     const annulee = /^cancelled/.test(v.status);
@@ -581,8 +587,11 @@ function importerVentesSeatiks_() {
   return ajoutees;
 }
 
-function ventesSeatiks_() {
-  const depuis = new Date(Date.now() - SEATIKS.joursRecherche * 864e5).toISOString();
+function ventesSeatiks_(debut) {
+  const depuis = new Date(Math.max(
+    new Date(debut).getTime(),
+    Date.now() - SEATIKS.joursRecherche * 864e5
+  )).toISOString();
   const ventes = [];
   let curseur = '';
   do {
