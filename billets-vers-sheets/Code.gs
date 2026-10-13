@@ -127,7 +127,7 @@ function ajouterLigne_(feuille, colonnes, c) {
   }
   mettre('MAIL', c.mail);
   mettre('INFORMATIONS', c.nom);
-  mettre('NUM CC', c.carte ? Number(c.carte) : '');
+  mettre('NUM CC', /^\d{4}$/.test(c.carte) ? Number(c.carte) : c.carte);
   mettre('VIAGOGO SEND TICKET', c.livraison);
 
   // Même mise en forme et mêmes menus déroulants que la ligne du dessus.
@@ -214,7 +214,7 @@ function analyserMessage_(message) {
     places: places_(lignes, quantite),
     mail: adresse_(message.getTo() || ''),
     nom: nom_(lignes),
-    carte: carte_(texte),
+    carte: carte_(texte, lignes),
     livraison: /\binstant/i.test(texte) ? 'INSTANT' : '',
   };
 }
@@ -359,12 +359,20 @@ function nom_(lignes) {
   return '';
 }
 
-/** 4 derniers chiffres de la carte. */
-function carte_(texte) {
+/** 4 derniers chiffres de la carte, sinon « Apple Pay » / « Google Pay » / « PayPal ». */
+function carte_(texte, lignes) {
+  const mode = valeurApres_(lignes, /^(mode de paiement|moyen de paiement|payment method)\s*:?/i);
+  const portefeuille = mode.match(/\b(apple\s*pay|google\s*pay|paypal)\b/i);
   const m = texte.match(
     /(?:se terminant par|finissant par|terminant par|ending (?:in|with)|[*•xX]{4}[\s-]*|[*•]{2,})\s*(\d{4})\b/i
   );
-  return m ? m[1] : '';
+  if (m) return m[1];
+  if (portefeuille) {
+    return { applepay: 'Apple Pay', googlepay: 'Google Pay', paypal: 'PayPal' }[
+      portefeuille[1].toLowerCase().replace(/\s+/g, '')
+    ];
+  }
+  return '';
 }
 
 function adresse_(destinataire) {

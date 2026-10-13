@@ -21,7 +21,7 @@ Un script Google Apps Script qui lit vos emails de confirmation de commande Viag
 | MAIL | Adresse qui a reçu l'email (votre adresse iCloud) |
 | INFORMATIONS | Nom trouvé dans l'email |
 | ARGENT RECU? | `NON` |
-| NUM CC | 4 derniers chiffres de la carte |
+| NUM CC | 4 derniers chiffres de la carte, ou `Apple Pay` (`Google Pay`, `PayPal`) |
 | VIAGOGO SEND TICKET | `INSTANT` si l'email parle de livraison instantanée |
 | RF LANCE | `NON` |
 
