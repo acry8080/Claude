@@ -473,8 +473,13 @@ const SEATIKS = {
   couleurAnnulee: '#ea9999',
 };
 
+/** La clé, même si son nom a été tapé avec des espaces ou en minuscules. */
 function cleSeatiks_() {
-  return PropertiesService.getScriptProperties().getProperty(SEATIKS.propriete);
+  const proprietes = PropertiesService.getScriptProperties().getProperties();
+  const nom = Object.keys(proprietes).filter(function (k) {
+    return k.trim().toUpperCase().replace(/[\s-]+/g, '_') === SEATIKS.propriete;
+  })[0];
+  return nom ? String(proprietes[nom]).trim() : '';
 }
 
 function appelSeatiks_(chemin, methode, corps) {
