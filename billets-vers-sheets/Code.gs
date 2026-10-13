@@ -34,6 +34,7 @@ const VALEURS_PAR_DEFAUT = {
   'COMMANDE VGG?': 'OUI',
   'REMBOURSE ?': 'NON',
   'ARGENT RECU?': 'NON',
+  'RF LANCE': 'NON',
 };
 
 /** Menu « Billets » dans le Google Sheet. */

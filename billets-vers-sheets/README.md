@@ -22,8 +22,9 @@ Un script Google Apps Script qui lit vos emails de confirmation de commande Viag
 | ARGENT RECU? | `NON` |
 | NUM CC | 4 derniers chiffres de la carte |
 | VIAGOGO SEND TICKET | `INSTANT` si l'email parle de livraison instantanée |
+| RF LANCE | `NON` |
 
-Les colonnes jaune, LISTE et RF LANCE restent vides, comme pour une commande qui vient d'être passée. Chaque nouvelle ligne reprend la mise en forme et les menus déroulants de la ligne du dessus.
+La colonne jaune et LISTE restent vides, comme pour une commande qui vient d'être passée. Chaque nouvelle ligne reprend la mise en forme et les menus déroulants de la ligne du dessus.
 
 Les colonnes sont retrouvées par leur titre en ligne 1. Vous pouvez donc les déplacer, mais ne les renommez pas.
 
