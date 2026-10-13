@@ -1,41 +1,40 @@
 /**
  * Billets → Google Sheets
  *
- * Lit les emails de confirmation Viagogo et StubHub dans Gmail et ajoute
- * une ligne par email dans la feuille « Billets » du Google Sheet auquel
- * ce script est rattaché. Un déclencheur relance l'import toutes les
- * 15 minutes. Chaque email n'est importé qu'une fois (colonne « ID message »).
+ * Lit les emails de confirmation de commande Viagogo / StubHub dans Gmail et
+ * ajoute une ligne par commande dans le tableau de suivi existant, au même
+ * format que les lignes saisies à la main :
+ *
+ *   A (match) | VENDU ? | PRIX ACHAT | PRIX VENTE | TICKETS VENDUS | DATE |
+ *   ORDER ID SEATIKS/TIXSTOCK | ORDER ID VIAGOGO | COMMANDE VGG? | REMBOURSE ? |
+ *   PLACES | MAIL | INFORMATIONS | ARGENT RECU? | NUM CC | … | LISTE |
+ *   VIAGOGO SEND TICKET | RF LANCE
+ *
+ * Les colonnes sont retrouvées par leur titre en ligne 1 : l'ordre peut changer.
+ * Une commande déjà présente (même ORDER ID VIAGOGO) n'est jamais ajoutée deux fois.
  */
 
 const CONFIG = {
-  nomFeuille: 'Billets',
+  // Nom de l'onglet du tableau. Vide = premier onglet du classeur.
+  nomFeuille: '',
   libelleGmail: 'Billets importés',
   intervalleMinutes: 15,
-  // Emails des deux plateformes qui parlent d'une commande (pas les newsletters).
+  // Emails de commande des deux plateformes (pas les newsletters), pas encore traités.
   recherche:
     'from:(viagogo OR stubhub) ' +
-    'subject:(commande OR order OR confirmation OR confirmé OR confirmed OR billet OR billets OR ticket OR tickets OR achat OR purchase) ' +
-    'newer_than:2y',
+    'subject:(commande OR order OR confirmation OR confirmé OR confirmée OR confirmed OR achat OR purchase) ' +
+    '-label:"Billets importés" newer_than:1y',
 };
 
-const COLONNES = [
-  'Reçu le',
-  'Plateforme',
-  'Objet',
-  'N° commande',
-  'Événement',
-  'Date événement',
-  'Lieu',
-  'Quantité',
-  'Section',
-  'Rang',
-  'Places',
-  'Total',
-  'Email destinataire',
-  'Expéditeur',
-  'Lien Gmail',
-  'ID message',
-];
+// Valeurs mises par défaut sur une nouvelle commande, comme dans le tableau.
+const VALEURS_PAR_DEFAUT = {
+  'VENDU ?': 'NON',
+  'PRIX VENTE': '//',
+  'ORDER ID SEATIKS/TIXSTOCK': '//',
+  'COMMANDE VGG?': 'OUI',
+  'REMBOURSE ?': 'NON',
+  'ARGENT RECU?': 'NON',
+};
 
 /** Menu « Billets » dans le Google Sheet. */
 function onOpen() {
@@ -47,40 +46,41 @@ function onOpen() {
     .addToUi();
 }
 
-/** Cherche les nouveaux emails et les ajoute à la feuille. */
+/** Cherche les nouveaux emails de commande et les ajoute au tableau. */
 function importerBillets() {
-  const feuille = obtenirFeuille_();
-  const dejaImportes = idsDejaImportes_(feuille);
-  const libelle =
-    GmailApp.getUserLabelByName(CONFIG.libelleGmail) ||
-    GmailApp.createLabel(CONFIG.libelleGmail);
+  const verrou = LockService.getScriptLock();
+  if (!verrou.tryLock(30000)) return 0;
+  try {
+    const feuille = obtenirFeuille_();
+    const colonnes = lireEnTetes_(feuille);
+    const colOrder = colonnes['ORDER ID VIAGOGO'];
+    if (!colOrder) throw new Error('Colonne « ORDER ID VIAGOGO » introuvable en ligne 1.');
+    const commandesConnues = valeursColonne_(feuille, colOrder);
+    const libelle =
+      GmailApp.getUserLabelByName(CONFIG.libelleGmail) ||
+      GmailApp.createLabel(CONFIG.libelleGmail);
 
-  const lignes = [];
-  let debut = 0;
-  let fils;
-  do {
-    fils = GmailApp.search(CONFIG.recherche, debut, 100);
+    const commandes = [];
+    const fils = GmailApp.search(CONFIG.recherche, 0, 100);
     fils.forEach(function (fil) {
       fil.getMessages().forEach(function (message) {
-        const id = message.getId();
-        if (dejaImportes.has(id)) return;
-        lignes.push(analyserMessage_(message));
-        dejaImportes.add(id);
+        const c = analyserMessage_(message);
+        if (!c.orderId || commandesConnues.has(c.orderId)) return;
+        commandesConnues.add(c.orderId);
+        commandes.push(c);
       });
-      fil.addLabel(libelle);
     });
-    debut += fils.length;
-  } while (fils.length === 100);
 
-  if (lignes.length) {
-    // Du plus ancien au plus récent.
-    lignes.sort(function (a, b) { return a[0] - b[0]; });
-    feuille
-      .getRange(feuille.getLastRow() + 1, 1, lignes.length, COLONNES.length)
-      .setValues(lignes);
+    commandes.sort(function (a, b) { return a.recuLe - b.recuLe; });
+    commandes.forEach(function (c) { ajouterLigne_(feuille, colonnes, c); });
+    // Marqués seulement une fois écrits : en cas d'erreur, ils seront repris.
+    fils.forEach(function (fil) { fil.addLabel(libelle); });
+
+    console.log(commandes.length + ' commande(s) ajoutée(s).');
+    return commandes.length;
+  } finally {
+    verrou.releaseLock();
   }
-  console.log(lignes.length + ' email(s) importé(s).');
-  return lignes.length;
 }
 
 /** Lance importerBillets toutes les CONFIG.intervalleMinutes minutes. */
@@ -99,11 +99,88 @@ function supprimerDeclencheur() {
     .forEach(function (t) { ScriptApp.deleteTrigger(t); });
 }
 
-// --- Analyse d'un email -----------------------------------------------------
+// --- Écriture dans le tableau -----------------------------------------------
+
+function ajouterLigne_(feuille, colonnes, c) {
+  const nbCol = feuille.getLastColumn();
+  const ligne = derniereLigneRemplie_(feuille, colonnes) + 1;
+  const valeurs = new Array(nbCol).fill('');
+
+  function mettre(titre, valeur) {
+    if (colonnes[titre] && valeur !== '' && valeur != null) valeurs[colonnes[titre] - 1] = valeur;
+  }
+  Object.keys(VALEURS_PAR_DEFAUT).forEach(function (t) { mettre(t, VALEURS_PAR_DEFAUT[t]); });
+  mettre('', c.evenement);
+  mettre('PRIX ACHAT', c.prix);
+  mettre('TICKETS VENDUS', c.quantite ? '0/' + c.quantite : '');
+  mettre('DATE', c.dateEvenement);
+  mettre('ORDER ID VIAGOGO', isNaN(c.orderId) ? c.orderId : Number(c.orderId));
+  mettre('PLACES', c.places);
+  mettre('MAIL', c.mail);
+  mettre('INFORMATIONS', c.nom);
+  mettre('NUM CC', c.carte ? Number(c.carte) : '');
+  mettre('VIAGOGO SEND TICKET', c.livraison);
+
+  // Même mise en forme et mêmes menus déroulants que la ligne du dessus.
+  if (ligne > 2) {
+    const modele = feuille.getRange(ligne - 1, 1, 1, nbCol);
+    const cible = feuille.getRange(ligne, 1, 1, nbCol);
+    modele.copyTo(cible, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+    modele.copyTo(cible, SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
+  }
+  feuille.getRange(ligne, 1, 1, nbCol).setValues([valeurs]);
+}
+
+function obtenirFeuille_() {
+  const classeur = SpreadsheetApp.getActiveSpreadsheet();
+  const feuille = CONFIG.nomFeuille
+    ? classeur.getSheetByName(CONFIG.nomFeuille)
+    : classeur.getSheets()[0];
+  if (!feuille) throw new Error('Onglet « ' + CONFIG.nomFeuille + ' » introuvable.');
+  return feuille;
+}
+
+/** { 'TITRE EN MAJUSCULES': numéro de colonne }. La colonne A sans titre (le match) est ''. */
+function lireEnTetes_(feuille) {
+  const titres = feuille.getRange(1, 1, 1, feuille.getLastColumn()).getDisplayValues()[0];
+  const colonnes = {};
+  titres.forEach(function (t, i) {
+    const cle = t.replace(/\s+/g, ' ').trim().toUpperCase();
+    if (!(cle in colonnes)) colonnes[cle] = i + 1;
+  });
+  colonnes[''] = 1;
+  return colonnes;
+}
+
+function valeursColonne_(feuille, col) {
+  const n = feuille.getLastRow();
+  if (n < 2) return new Set();
+  return new Set(
+    feuille.getRange(2, col, n - 1, 1).getDisplayValues()
+      .map(function (r) { return r[0].trim(); })
+      .filter(Boolean)
+  );
+}
+
+/**
+ * Dernière ligne avec un match ou un order ID. Les colonnes à menus déroulants
+ * peuvent être pré-remplies plus bas, on ne s'y fie pas.
+ */
+function derniereLigneRemplie_(feuille, colonnes) {
+  const n = feuille.getLastRow();
+  if (n < 2) return 1;
+  const a = feuille.getRange(2, 1, n - 1, 1).getDisplayValues();
+  const h = feuille.getRange(2, colonnes['ORDER ID VIAGOGO'], n - 1, 1).getDisplayValues();
+  for (let i = n - 2; i >= 0; i--) {
+    if (a[i][0].trim() || h[i][0].trim()) return i + 2;
+  }
+  return 1;
+}
+
+// --- Lecture d'un email -----------------------------------------------------
 
 function analyserMessage_(message) {
   const objet = message.getSubject() || '';
-  const expediteur = message.getFrom() || '';
   const corps = (message.getPlainBody() || '').replace(/ /g, ' ');
   const lignes = corps
     // Les champs alignés sur une même ligne (« Section: 512   Row: 3 ») sont séparés.
@@ -112,28 +189,20 @@ function analyserMessage_(message) {
     .filter(Boolean);
   const texte = lignes.join('\n');
 
-  const plateforme = /stubhub/i.test(expediteur) ? 'StubHub'
-    : /viagogo/i.test(expediteur) ? 'Viagogo'
-    : '';
-
-  return [
-    message.getDate(),
-    plateforme,
-    objet,
-    numeroCommande_(objet + '\n' + texte),
-    evenement_(objet, lignes),
-    dateEvenement_(texte),
-    valeurApres_(lignes, /^(lieu|salle|stade|venue|location)\b/i),
-    quantite_(texte),
-    valeurApres_(lignes, /^(section|secteur|bloc|catégorie|category|zone)\b/i),
-    valeurApres_(lignes, /^(rang(ée)?|row)\b/i),
-    valeurApres_(lignes, /^(si[eè]ges?|places?|seats?)\b/i),
-    total_(lignes),
-    message.getTo() || '',
-    expediteur,
-    'https://mail.google.com/mail/u/0/#all/' + message.getThread().getId(),
-    message.getId(),
-  ];
+  const quantite = quantite_(texte);
+  return {
+    recuLe: message.getDate(),
+    orderId: numeroCommande_(objet + '\n' + texte),
+    evenement: evenement_(objet, lignes),
+    prix: total_(lignes),
+    quantite: quantite,
+    dateEvenement: dateEvenement_(texte),
+    places: places_(lignes, quantite),
+    mail: adresse_(message.getTo() || ''),
+    nom: nom_(lignes),
+    carte: carte_(texte),
+    livraison: /\binstant/i.test(texte) ? 'INSTANT' : '',
+  };
 }
 
 /**
@@ -158,28 +227,38 @@ function numeroCommande_(texte) {
 }
 
 function evenement_(objet, lignes) {
-  const champ = valeurApres_(lignes, /^(événement|évènement|event)\b/i);
+  const champ = valeurApres_(lignes, /^(événement|évènement|event|match)\b/i);
   if (champ) return champ;
   // Ex. « Votre commande pour Coldplay est confirmée », « Your order for X is confirmed »
   const m = objet.match(/\b(?:pour|for)\s+(.+?)(?:\s+(?:est|is|a été|has been)\b|\s*[-–|]|$)/i);
   return m ? m[1].trim() : '';
 }
 
-const MOIS_ =
-  '(?:janv|févr|fevr|mars|avr|mai|juin|juil|août|aout|sept|oct|nov|déc|dec|' +
+const MOIS_ = {
+  janv: 1, jan: 1, févr: 2, fevr: 2, fév: 2, feb: 2, mars: 3, mar: 3, avr: 4, apr: 4,
+  mai: 5, may: 5, juin: 6, jun: 6, juil: 7, jul: 7, août: 8, aout: 8, aug: 8,
+  sept: 9, sep: 9, oct: 10, nov: 11, déc: 12, dec: 12,
+};
+const MOIS_RE_ =
+  '(janv|févr|fevr|fév|mars|avr|mai|juin|juil|août|aout|sept|oct|nov|déc|dec|' +
   'jan|feb|mar|apr|may|jun|jul|aug|sep)[a-zéû]*\\.?';
 
-function dateEvenement_(texte) {
-  const heure = '(?:\\s*(?:à|at|,|-|–)?\\s*\\d{1,2}[:h]\\d{2}(?:\\s*[ap]m)?)?';
-  const formats = [
-    new RegExp('\\b\\d{1,2}\\s+' + MOIS_ + '\\s+\\d{4}' + heure, 'i'),     // 14 juin 2026
-    new RegExp('\\b' + MOIS_ + '\\s+\\d{1,2},?\\s+\\d{4}' + heure, 'i'),   // June 14, 2026
-    new RegExp('\\b\\d{1,2}/\\d{1,2}/\\d{4}' + heure),                    // 14/06/2026
-  ];
-  for (const f of formats) {
-    const m = texte.match(f);
-    if (m) return m[0].trim();
+function numeroMois_(nom) {
+  const n = nom.toLowerCase().replace('.', '');
+  for (const cle of Object.keys(MOIS_).sort(function (a, b) { return b.length - a.length; })) {
+    if (n.indexOf(cle) === 0) return MOIS_[cle];
   }
+  return 0;
+}
+
+/** Date de l'événement, en vraie date (affichée jj/mm/aaaa par la colonne). */
+function dateEvenement_(texte) {
+  let m = texte.match(new RegExp('\\b(\\d{1,2})\\s+' + MOIS_RE_ + '\\s+(\\d{4})', 'i'));
+  if (m) return new Date(Number(m[3]), numeroMois_(m[2]) - 1, Number(m[1]));
+  m = texte.match(new RegExp('\\b' + MOIS_RE_ + '\\s+(\\d{1,2}),?\\s+(\\d{4})', 'i'));
+  if (m) return new Date(Number(m[3]), numeroMois_(m[1]) - 1, Number(m[2]));
+  m = texte.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
   return '';
 }
 
@@ -190,36 +269,68 @@ function quantite_(texte) {
   return m ? Number(m[1]) : '';
 }
 
+/** Montant total payé, en nombre (ex. « 1 007,02 € » → 1007.02). */
 function total_(lignes) {
   const montant = /(?:[€$£]\s?\d[\d\s.,]*\d|\d[\d\s.,]*\d?\s?(?:€|EUR|USD|GBP|\$|£))/i;
   for (let i = 0; i < lignes.length; i++) {
     if (!/\b(total|montant|amount|payé|paid)\b/i.test(lignes[i])) continue;
     const m = lignes[i].match(montant) || (lignes[i + 1] || '').match(montant);
-    if (m) return m[0].trim();
+    if (m) return enNombre_(m[0]);
   }
   return '';
 }
 
-// --- Feuille ----------------------------------------------------------------
-
-function obtenirFeuille_() {
-  const classeur = SpreadsheetApp.getActiveSpreadsheet();
-  let feuille = classeur.getSheetByName(CONFIG.nomFeuille);
-  if (!feuille) feuille = classeur.insertSheet(CONFIG.nomFeuille);
-  if (feuille.getLastRow() === 0) {
-    feuille.appendRow(COLONNES);
-    feuille.setFrozenRows(1);
-    feuille.getRange(1, 1, 1, COLONNES.length).setFontWeight('bold');
-    feuille.getRange('A:A').setNumberFormat('dd/mm/yyyy hh:mm');
+function enNombre_(s) {
+  let n = s.replace(/[^\d.,]/g, '');
+  const dernier = Math.max(n.lastIndexOf(','), n.lastIndexOf('.'));
+  // Le dernier séparateur suivi de 1 ou 2 chiffres est la virgule décimale.
+  if (dernier >= 0 && n.length - dernier - 1 <= 2) {
+    n = n.slice(0, dernier).replace(/[.,]/g, '') + '.' + n.slice(dernier + 1);
+  } else {
+    n = n.replace(/[.,]/g, '');
   }
-  return feuille;
+  return Number(n);
 }
 
-function idsDejaImportes_(feuille) {
-  const derniere = feuille.getLastRow();
-  if (derniere < 2) return new Set();
-  const col = COLONNES.indexOf('ID message') + 1;
-  return new Set(
-    feuille.getRange(2, col, derniere - 1, 1).getValues().map(function (r) { return String(r[0]); })
+/** « 135 / 27 / 39-40 », ou « x4 L GA » quand il n'y a ni rang ni siège. */
+function places_(lignes, quantite) {
+  const section = valeurApres_(lignes, /^(section|secteur|bloc|tribune|catégorie|category|zone)\b/i);
+  const rang = valeurApres_(lignes, /^(rang(ée)?|row)\b/i);
+  const sieges = valeurApres_(lignes, /^(si[eè]ges?|places?|seats?)\b/i);
+  if (!rang && !sieges) return section ? (quantite ? 'x' + quantite + ' ' : '') + section : '';
+  return [section, rang, plageSieges_(sieges)].filter(Boolean).join(' / ');
+}
+
+/** « 39, 40 » → « 39-40 » quand les sièges se suivent. */
+function plageSieges_(s) {
+  const n = (s.match(/\d+/g) || []).map(Number);
+  if (n.length < 2) return s;
+  for (let i = 1; i < n.length; i++) if (n[i] !== n[i - 1] + 1) return s;
+  return n[0] + '-' + n[n.length - 1];
+}
+
+function nom_(lignes) {
+  const champ = valeurApres_(
+    lignes,
+    /^(nom du titulaire|titulaire|nom sur le billet|nom|ticket holder|name on ticket|attendee|name)\b/i
   );
+  if (champ) return champ;
+  for (const l of lignes.slice(0, 15)) {
+    const m = l.match(/^(?:bonjour|hello|hi|dear|cher|chère)\s+([^,!]+)[,!]?$/i);
+    if (m) return m[1].trim();
+  }
+  return '';
+}
+
+/** 4 derniers chiffres de la carte. */
+function carte_(texte) {
+  const m = texte.match(
+    /(?:se terminant par|finissant par|terminant par|ending (?:in|with)|[*•xX]{4}[\s-]*|[*•]{2,})\s*(\d{4})\b/i
+  );
+  return m ? m[1] : '';
+}
+
+function adresse_(destinataire) {
+  const m = destinataire.match(/[^\s<>,"]+@[^\s<>,"]+/);
+  return m ? m[0] : destinataire;
 }
