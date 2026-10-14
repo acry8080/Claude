@@ -106,7 +106,32 @@ h2 { font: 700 1.02rem/1.2 var(--display); margin: 0; }
 .minus { color: var(--ink); }
 .neg { color: var(--bad); }
 
-.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; }
+
+/* Carte billet : partie principale + talon détachable */
+.tk { --site: #6b7385; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 112px; width: 100%; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); text-align: left; padding: 0; overflow: hidden; }
+.tk::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--site); }
+.tk:hover { border-color: var(--muted); }
+.tk-main { padding: 14px 14px 14px 20px; min-width: 0; display: grid; gap: 6px; align-content: start; }
+.tk-top { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--muted); white-space: nowrap; min-width: 0; }
+.tk-top span { overflow: hidden; text-overflow: ellipsis; }
+.tk-site { font-weight: 700; color: var(--site); }
+.tk-ev { font: 800 1.12rem/1.2 var(--display); letter-spacing: -.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tk-meta { font-size: .84rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tk-stub { position: relative; border-left: 2px dashed var(--line); background: var(--surface-2); display: grid; align-content: center; justify-items: center; gap: 2px; padding: 12px 8px; text-align: center; }
+.tk-stub::before, .tk-stub::after { content: ""; position: absolute; left: -10px; width: 18px; height: 18px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
+.tk-stub::before { top: -10px; } .tk-stub::after { bottom: -10px; }
+.tk-k { font-size: .64rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.tk-v { font: 800 1.35rem/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.tk-s { font-size: .74rem; color: var(--muted); }
+.tk-list { display: grid; gap: 10px; }
+
+/* Défilement horizontal sur l'accueil */
+.rail { display: grid; grid-auto-flow: column; grid-auto-columns: min(320px, 86%); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: thin; }
+.rail > * { scroll-snap-align: start; }
 .chip { border: 0; background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: .86rem; font-weight: 600; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 .search { width: 100%; border: 0; background: var(--surface); border-radius: 12px; padding: 10px 14px; }
@@ -349,6 +374,8 @@ function vueAccueil() {
     '<section class="hero"><div class="lbl">Bénéfice net</div><div class="big n">' + (t.net < 0 ? '−' : '') + ent.toLocaleString('fr-FR') + '<small>,' + String(dec).padStart(2, '0') + ' €</small></div>' +
       '<div class="delta">Ce mois-ci <b>' + sign(t.profitMois) + '</b></div>' + sparkline() +
       '<div class="hero-foot"><span>Après prix d\'achat et frais</span><span>Seatiks connecté · emails lus il y a 2 min</span></div></section>' +
+    '<div><div class="row-head"><h2>Vos billets</h2><button class="linkbtn" data-aller="billets">Tout voir (' + commandes.length + ')</button></div><div class="rail">' +
+      commandes.filter(c => actif(c) && new Date(c.date + 'T23:59:00') >= AUJ).sort((a, b) => a.date.localeCompare(b.date)).map(carteBillet).join('') + '</div></div>' +
     '<div class="comptes">' +
       '<button class="compte" data-aller="operations" data-filtre="attente"><div class="ic" style="background:var(--warn-soft);color:var(--warn)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="lbl">À recevoir</div><div class="val n">' + eur(t.aRecevoir) + '</div><div class="hint">' + t.nAttente + ' vente(s) en attente</div></button>' +
       '<button class="compte" data-aller="billets"><div class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg></div><div class="lbl">Stock</div><div class="val n">' + eur(t.stock) + '</div><div class="hint">' + t.stockN + ' billets non vendus</div></button>' +
@@ -371,19 +398,37 @@ function vueOperations() {
     '<p class="note">Bientôt : bouton « Importer un relevé » pour rapprocher vos achats avec les opérations de votre banque (montant réellement débité, frais de change).</p></div>';
 }
 
+function carteBillet(c) {
+  const s = SITES[c.site] || { c: '#6b7385' };
+  const reste = c.qte - vendus(c);
+  const [k] = statut(c);
+  const rond = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.round(Math.abs(n)).toLocaleString('fr-FR') + ' €';
+  const droite = k === 'rembourse' || k === 'annule'
+    ? ['Billets', '—', k === 'rembourse' ? 'remboursés' : 'à vérifier']
+    : k === 'vente'
+    ? ['En vente', rond(c.annonce.prix).replace('+', ''), 'par billet']
+    : k === 'vendu' || k === 'partiel'
+      ? ['Bénéfice', rond(c.ventes.reduce((t, v) => t + profitV(c, v), 0)), vendus(c) + '/' + c.qte + ' vendus']
+      : ['Billets', String(reste), c.qte > reste ? 'sur ' + c.qte : 'à vendre'];
+  return '<button class="tk" data-detail="' + c.id + '" style="--site:' + s.c + '"><span class="tk-main">' +
+    '<span class="tk-top"><span class="tk-site">' + c.site + '</span><span>' + jourCourt(c.date) + '</span></span>' +
+    '<span class="tk-ev">' + c.ev + '</span>' +
+    '<span class="tk-meta">' + places(c) + ' · ' + c.lieu + '</span>' +
+    '<span class="tk-tags">' + pill(c) + (aCompleter(c) ? '<span class="pill p-attente">À compléter</span>' : '') + '</span></span>' +
+    '<span class="tk-stub"><span class="tk-k">' + droite[0] + '</span><span class="tk-v ' + (droite[0] === 'Bénéfice' ? (droite[1].startsWith('−') ? 'neg' : 'plus') : '') + '">' + droite[1] + '</span><span class="tk-s">' + droite[2] + '</span></span></button>';
+}
+
 function vueBillets() {
   const f = [['tous', 'Tous'], ['completer', 'À compléter'], ['list', 'À lister'], ['vente', 'En vente'], ['vendu', 'Vendus'], ['annule', 'Annulés']];
   const liste = commandes.filter(c => {
     const k = statut(c)[0];
     const ok = filtreBillets === 'tous' || (filtreBillets === 'completer' ? aCompleter(c) : filtreBillets === 'vendu' ? (k === 'vendu' || k === 'partiel') : filtreBillets === 'annule' ? (k === 'annule' || k === 'rembourse') : k === filtreBillets);
     return ok && (c.ev + ' ' + c.id + ' ' + c.site).toLowerCase().includes(recherche.toLowerCase());
-  }).sort((a, b) => a.date.localeCompare(b.date));
-  return demo + '<div class="row-head"><h1>Billets</h1><span class="sub">' + commandes.length + ' commandes, tous sites</span></div>' +
-    '<input class="search" id="recherche" type="search" placeholder="Rechercher un événement, un site, un n° de commande" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher un billet">' +
+  }).sort((a, b) => (actif(b) - actif(a)) || (actif(a) ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)));
+  return '<div class="row-head"><h1>Billets</h1><span class="sub">' + liste.length + ' sur ' + commandes.length + ' · tous sites</span></div>' +
     '<div class="chips">' + f.map(x => '<button class="chip" data-fb="' + x[0] + '" aria-pressed="' + (filtreBillets === x[0]) + '">' + x[1] + '</button>').join('') + '</div>' +
-    '<div class="card">' + (liste.map(c => '<button class="op" data-detail="' + c.id + '">' + av(c.site) +
-      '<span class="mid"><span class="t">' + c.ev + '</span><span class="s">' + jourCourt(c.date) + ' · ' + places(c) + '</span></span>' +
-      '<span class="amt"><span class="a">' + vendus(c) + '/' + c.qte + '</span><span class="p">' + pill(c) + (aCompleter(c) ? ' <span class="pill p-attente">À compléter</span>' : '') + '</span></span></button>').join('') || '<p class="sub" style="padding:16px">Aucun billet ne correspond.</p>') + '</div>';
+    '<input class="search" id="recherche" type="search" placeholder="Rechercher un événement, un site, un n° de commande" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher un billet">' +
+    '<div class="tk-list">' + (liste.map(carteBillet).join('') || '<p class="sub">Aucun billet ne correspond.</p>') + '</div>';
 }
 
 function vueDetail() {
