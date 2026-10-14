@@ -2,7 +2,7 @@
  * Revente Billets : envoie vos emails d'achat Gmail au site.
  *
  * Toutes les 5 minutes, ce script cherche les nouveaux emails Ticketmaster, Viagogo
- * et StubHub (tous pays), les envoie au site qui les lit avec l'IA, puis demande au
+ * et StubHub (tous pays), les envoie au site qui les lit, puis demande au
  * site de récupérer les ventes Seatiks.
  *
  * Réglages (Paramètres du projet → Propriétés du script) :

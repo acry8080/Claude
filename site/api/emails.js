@@ -3,6 +3,10 @@ import { estLeScript } from './_lib/auth.js';
 import { db, echec, ecrireReglage, ok } from './_lib/db.js';
 import { enEuros } from './_lib/devises.js';
 import { lireEmail } from './_lib/ia.js';
+import { lireEmailSansIA } from './_lib/lecture.js';
+
+// Sans clé Anthropic, les emails sont lus gratuitement, sans IA.
+const avecIA = () => !!(process.env.ANTHROPIC_API_KEY || '').trim();
 
 const SITES = [[/ticketmaster/i, 'Ticketmaster'], [/viagogo/i, 'Viagogo'], [/stubhub/i, 'StubHub'], [/axs/i, 'AXS'], [/fnac/i, 'Fnac Spectacles'], [/see ?tickets/i, 'See Tickets']];
 const nomSite = (s, de) => (SITES.find(([re]) => re.test(s || '') || re.test(de || '')) || [null, (s || 'Autre').trim()])[1];
@@ -26,7 +30,8 @@ export default async function handler(req, res) {
     const noter = (statut, extra) => db().from('emails').insert({ message_id, de, a, objet, statut, ...extra }).then(ok);
     let lu;
     try {
-      lu = await lireEmail({ de, a, objet, date, corps: String(corps).slice(0, 100000) });
+      const email = { de, a, objet, date, corps: String(corps).slice(0, 100000) };
+      lu = avecIA() ? await lireEmail(email) : lireEmailSansIA(email);
     } catch (e) {
       if (passagere(e)) return res.status(503).json({ erreur: 'IA indisponible, réessai plus tard : ' + e.message });
       await noter('erreur', { detail: e.message });

@@ -6,7 +6,7 @@ Le site suit vos achats de billets (Ticketmaster de tous pays, Viagogo, StubHub)
 
 1. Vous achetez un billet : l'email de confirmation arrive dans votre Gmail, comme aujourd'hui (réexpédition iCloud).
 2. Toutes les 5 minutes, le petit script Gmail (`apps-script/Code.gs`) envoie les nouveaux emails au site.
-3. Le site lit chaque email avec l'IA et crée la commande. Ce qui manque (rang, sièges…) est marqué « à compléter ».
+3. Le site lit chaque email (gratuitement, ou avec l'IA si vous ajoutez une clé Anthropic) et crée la commande. Ce qui manque (rang, sièges…) est marqué « à compléter ».
 4. Sur la fiche du billet, vous mettez un prix : l'annonce part sur Seatiks (E-ticket, tous ensemble, toutes les plateformes).
 5. Les ventes Seatiks reviennent toutes seules : vendu, montant reçu, payé, livré.
 
@@ -17,7 +17,8 @@ Le site suit vos achats de billets (Ticketmaster de tous pays, Viagogo, StubHub)
 2. Menu **SQL Editor** → **New query** → collez tout le fichier `supabase/schema.sql` → **Run**.
 3. Menu **Project Settings → API** : notez **Project URL** et la clé **service_role** (pas la clé anon).
 
-### 2. Clé IA (lecture des emails)
+### 2. Clé IA (facultatif)
+Sans clé, les emails sont lus gratuitement en cherchant les libellés habituels (Order number, Section, Row, Total…). L'IA lit mieux les formats inhabituels. Pour l'activer :
 1. Créez un compte sur console.anthropic.com, ajoutez un crédit (5 € pour commencer).
 2. **API Keys → Create Key**, notez la clé.
 
@@ -31,7 +32,7 @@ Le site suit vos achats de billets (Ticketmaster de tous pays, Viagogo, StubHub)
 |---|---|
 | `SUPABASE_URL` | le Project URL de Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | la clé service_role de Supabase |
-| `ANTHROPIC_API_KEY` | la clé IA |
+| `ANTHROPIC_API_KEY` | facultatif : la clé IA |
 | `SEATIKS_API_KEY` | votre clé Seatiks `stk_live_…` |
 | `SITE_PASSWORD` | le mot de passe pour entrer sur le site (choisissez-le) |
 | `CLE_SCRIPT` | une longue phrase secrète inventée, ex. 40 lettres et chiffres au hasard |
@@ -46,7 +47,7 @@ Le site suit vos achats de billets (Ticketmaster de tous pays, Viagogo, StubHub)
 5. Dans l'ancien projet lié au Google Sheet, exécutez `supprimerDeclencheur` pour l'arrêter.
 
 ## Bon à savoir
-- Lecture d'un email par l'IA : environ 1 à 3 centimes, selon la longueur.
+- Lecture d'un email : gratuite sans clé IA ; avec l'IA, environ 1 à 3 centimes selon la longueur.
 - Les commandes passées avant l'installation ne sont pas importées : on repart de zéro.
 - Pour un nouveau site d'achat, ajoutez son nom dans `EXPEDITEURS`, en haut du script Gmail.
 - Une vente Seatiks d'une annonce créée hors du site arrive dans « À faire → Ventes Seatiks à rattacher ».
