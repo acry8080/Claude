@@ -44,8 +44,8 @@ button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
-.app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100%; }
-nav.side { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; padding: 20px 14px; border-right: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 4px; }
+.app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100%; background: linear-gradient(to right, var(--surface) 219px, var(--line) 219px, var(--line) 220px, transparent 220px); }
+nav.side { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; }
 .brand { font: 700 1.5rem/1 var(--display); letter-spacing: .02em; text-transform: uppercase; padding: 4px 10px 18px; }
 .brand small { display: block; font: 500 .72rem var(--body); letter-spacing: .08em; color: var(--muted); margin-top: 6px; }
 nav.side button { display: flex; align-items: center; gap: 10px; text-align: left; border: 0; background: none; padding: 9px 10px; border-radius: 8px; color: var(--muted); font-weight: 500; }
@@ -144,6 +144,15 @@ form.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
 .field { display: grid; gap: 4px; font-size: .82rem; color: var(--muted); }
 .field input, .field select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; color: var(--ink); width: 130px; font-size: .95rem; }
 .field.wide input { width: 220px; }
+.tag { display: inline-block; font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; padding: 1px 6px; border-radius: 4px; margin-left: 4px; vertical-align: 1px; }
+.field .tag { justify-self: start; margin-left: 0; }
+.tag.auto { background: var(--good-soft); color: var(--good); }
+.tag.main { background: var(--accent-soft); color: var(--accent); }
+.tag.manque { background: var(--warn-soft); color: var(--warn); }
+.alerte { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; font-size: .92rem; }
+.check { display: flex; align-items: center; gap: 6px; font-size: .9rem; color: var(--ink); padding-bottom: 8px; }
+.seatiks-sec { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .92rem; }
+.field select { width: 230px; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .note { font-size: .84rem; color: var(--muted); margin: 8px 0 0; }
 
@@ -154,7 +163,7 @@ form.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
   .grid2 { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 720px) {
-  .app { grid-template-columns: minmax(0, 1fr); }
+  .app { grid-template-columns: minmax(0, 1fr); background: none; }
   nav.side { display: none; }
   nav.bottom { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
   nav.bottom button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; font-size: .72rem; color: var(--muted); padding: 4px; }
@@ -196,7 +205,7 @@ form.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
 // ---------- Données d'exemple (la maquette ne touche à rien de réel) ----------
 const AUJOURDHUI = new Date('2026-10-14T12:00:00');
 const commandes = [
-  { id: '656921075', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-10-05', bloc: '13C', rang: '', sieges: '', qte: 2, prix: 182.09, mail: 'quai.nord47@icloud.com', nom: 'Hugo', carte: 'Apple Pay', annonce: { prix: 155, active: true }, ventes: [], rembourse: false, annulee: false },
+  { id: '656921075', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-10-05', bloc: '13C', rang: '', sieges: '', qte: 2, prix: 182.09, mail: 'quai.nord47@icloud.com', nom: 'Hugo', carte: 'Apple Pay', annonce: null, ventes: [], rembourse: false, annulee: false },
   { id: '655651277', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-09-28', bloc: '11C', rang: '13', sieges: '35-36', qte: 2, prix: 543.29, mail: 'tribune.est12@icloud.com', nom: 'Lena Brandt', carte: '3392', annonce: { prix: 320, active: false }, ventes: [{ id: 'SK-48812', le: '2026-10-09', qte: 2, montant: 612.4, paye: true }], rembourse: false, annulee: false },
   { id: '656373947', site: 'StubHub', ev: 'Borussia Dortmund vs Eintracht Frankfurt', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-07', bloc: '54', rang: '', sieges: '', qte: 2, prix: 237.4, devise: 'USD', mail: 'mur.jaune09@icloud.com', nom: 'Victoria', carte: '4452', annonce: null, ventes: [], rembourse: false, annulee: false },
   { id: '656372126', site: 'StubHub', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-10-07', bloc: 'S4', rang: '', sieges: '', qte: 2, prix: 443.48, devise: 'USD', mail: 'rhein.ufer33@icloud.com', nom: 'Fanny', carte: '4452', annonce: null, ventes: [], rembourse: false, annulee: true },
@@ -205,10 +214,18 @@ const commandes = [
   { id: '656600391', site: 'Viagogo', ev: 'Stevie Wonder', lieu: 'Accor Arena, Paris', date: '2026-10-15', achat: '2026-09-22', bloc: 'Lower U', rang: '23', sieges: '25-26', qte: 2, prix: 1486.15, mail: 'scene.bleue04@icloud.com', nom: 'Sebastien Ploch', carte: '3104', annonce: { prix: 700, active: false }, ventes: [{ id: 'SK-48791', le: '2026-10-04', qte: 2, montant: 1372, paye: true }], rembourse: false, annulee: false },
   { id: '656659037', site: 'Viagogo', ev: 'Muse', lieu: 'Stade de France', date: '2026-11-27', achat: '2026-10-10', bloc: 'Fosse', rang: '', sieges: '', qte: 4, prix: 844.21, mail: 'fosse.or18@icloud.com', nom: 'Croyance Barna', carte: 'Apple Pay', annonce: null, ventes: [], rembourse: false, annulee: false },
   { id: '656175443', site: 'Viagogo', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-09-18', bloc: '014', rang: '12', sieges: '16-17', qte: 2, prix: 497.9, mail: 'dom.vert56@icloud.com', nom: 'Cecile Fabre', carte: '3392', annonce: { prix: 230, active: false }, ventes: [{ id: 'SK-48702', le: '2026-10-08', qte: 2, montant: 438.6, paye: true }], rembourse: false, annulee: false },
-  { id: '656227224', site: 'Viagogo', ev: 'Borussia Dortmund vs Werder Bremen', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-02', bloc: '63', rang: '', sieges: '', qte: 4, prix: 861.23, mail: 'mur.jaune09@icloud.com', nom: 'Thomas Stefe', carte: '4452', annonce: { prix: 260, active: true }, ventes: [], rembourse: false, annulee: false },
+  { id: '656227224', site: 'Viagogo', ev: 'Borussia Dortmund vs Werder Bremen', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-02', bloc: '63', rang: '5', sieges: '11-14', qte: 4, prix: 861.23, mail: 'mur.jaune09@icloud.com', nom: 'Thomas Stefe', carte: '4452', annonce: { prix: 260, active: true }, ventes: [], rembourse: false, annulee: false },
   { id: '656061209', site: 'Viagogo', ev: 'Céline Dion', lieu: 'Paris La Défense Arena', date: '2026-09-19', achat: '2026-08-30', bloc: 'Cat. 1', rang: '14', sieges: '7-8', qte: 2, prix: 895.38, mail: 'nuit.claire22@icloud.com', nom: 'Khalida Amrani', carte: '3392', annonce: { prix: 450, active: false }, ventes: [{ id: 'SK-48311', le: '2026-09-10', qte: 2, montant: 900, paye: true }], rembourse: false, annulee: false },
   { id: '655554004', site: 'Viagogo', ev: 'England vs Spain', lieu: 'Wembley Stadium', date: '2026-09-26', achat: '2026-09-02', bloc: '135', rang: '27', sieges: '39-40', qte: 2, prix: 492.33, mail: 'tribune.est12@icloud.com', nom: 'Fernand Leone', carte: '3104', annonce: null, ventes: [], rembourse: true, annulee: false },
 ];
+// Ce que le site a pu lire dans l'email, et la section Seatiks qu'il a trouvée.
+commandes.forEach(c => {
+  c.auto = { bloc: !!c.bloc, rang: !!c.rang, sieges: !!c.sieges };
+  c.libre = c.bloc === 'Fosse';
+  c.seatiks = c.id === '656373947'
+    ? { section: '', auto: false, choix: ['Block 54 · Lower', 'Block 54 · Upper', 'Category 6 (bloc au choix)'] }
+    : { section: c.libre ? 'Fosse Or' : 'Block ' + c.bloc, auto: true, choix: [] };
+});
 const autresDepenses = [
   { le: '2026-10-01', libelle: 'Nom de domaine du site', montant: 10.99 },
   { le: '2026-09-15', libelle: 'Abonnement iCloud+', montant: 2.99 },
@@ -225,6 +242,9 @@ const vendus = c => c.ventes.reduce((s, v) => s + v.qte, 0);
 const coutUnitaire = c => c.prix / c.qte;
 const profitVente = (c, v) => v.montant - coutUnitaire(c) * v.qte;
 const places = c => c.rang ? [c.bloc, c.rang, c.sieges].filter(Boolean).join(' / ') : 'x' + c.qte + ' ' + c.bloc;
+const actif = c => !c.rembourse && !c.annulee && vendus(c) < c.qte;
+const manquants = c => [!c.bloc && 'le bloc', !c.libre && !c.rang && 'le rang', !c.libre && !c.sieges && 'les sièges'].filter(Boolean);
+const aCompleter = c => actif(c) && (manquants(c).length > 0 || !c.seatiks.section);
 const passe = c => new Date(c.date + 'T23:59:00') < AUJOURDHUI;
 
 function statut(c) {
@@ -274,6 +294,7 @@ function vueTableau() {
   const aLister = commandes.filter(c => statut(c).cle === 'list' && !passe(c));
   const nonPayees = commandes.flatMap(c => c.ventes.filter(v => !v.paye));
   const annulees = commandes.filter(c => c.annulee && !c.rembourse);
+  const completer = commandes.filter(aCompleter);
   const bientot = commandes.filter(c => { const r = c.qte - vendus(c); const j = (new Date(c.date) - AUJOURDHUI) / 864e5; return r > 0 && !c.rembourse && !c.annulee && j >= 0 && j <= 7; });
 
   return bandeau +
@@ -287,22 +308,23 @@ function vueTableau() {
     '<div class="grid2">' +
       '<section class="panel"><h2>Bénéfice par événement</h2><div class="bars">' + (bars || '<p class="sub">Aucune vente pour l\'instant.</p>') + '</div></section>' +
       '<section class="panel"><h2>À faire</h2><ul class="todo">' +
+        '<li><span><b>Places à compléter</b><br><span class="sub">Rang, sièges ou section Seatiks introuvables dans l\'email</span></span><span class="count">' + completer.length + '</span></li>' +
         '<li><span><b>À mettre en vente</b><br><span class="sub">Billets achetés, pas encore listés</span></span><span class="count">' + aLister.length + '</span></li>' +
         '<li><span><b>Match ou concert dans moins de 7 jours</b><br><span class="sub">Il reste des billets à vendre</span></span><span class="count">' + bientot.length + '</span></li>' +
         '<li><span><b>Paiements en attente</b><br><span class="sub">Ventes Seatiks pas encore payées</span></span><span class="count">' + nonPayees.length + '</span></li>' +
         '<li><span><b>Annulations probables</b><br><span class="sub">StubHub : « a further email »</span></span><span class="count">' + annulees.length + '</span></li>' +
-      '</ul><div class="actions"><button class="btn" data-aller="billets" data-filtre="list">Voir les billets à lister</button></div></section>' +
+      '</ul><div class="actions"><button class="btn" data-aller="billets" data-filtre="completer">Compléter les places</button><button class="btn" data-aller="billets" data-filtre="list">Voir les billets à lister</button></div></section>' +
     '</div>';
 }
 
 function vueBillets() {
-  const filtres = [['tous', 'Tous'], ['list', 'À lister'], ['vente', 'En vente'], ['vendu', 'Vendus'], ['annule', 'Annulés / remboursés']];
+  const filtres = [['tous', 'Tous'], ['list', 'À lister'], ['vente', 'En vente'], ['vendu', 'Vendus'], ['annule', 'Annulés / remboursés'], ['completer', 'Places à compléter']];
   const liste = commandes.filter(c => {
     const s = statut(c).cle;
-    const okFiltre = filtre === 'tous' || (filtre === 'vendu' ? (s === 'vendu' || s === 'partiel') : filtre === 'annule' ? (s === 'annule' || s === 'rembourse') : s === filtre);
+    const okFiltre = filtre === 'tous' || (filtre === 'vendu' ? (s === 'vendu' || s === 'partiel') : filtre === 'annule' ? (s === 'annule' || s === 'rembourse') : filtre === 'completer' ? aCompleter(c) : s === filtre);
     return okFiltre && (c.ev + ' ' + c.id + ' ' + c.bloc).toLowerCase().includes(recherche.toLowerCase());
   }).sort((a, b) => a.date.localeCompare(b.date));
-  const rows = liste.map(c => '<tr class="click" data-detail="' + c.id + '"><td class="ev">' + c.ev + '<small>' + c.lieu + '</small></td><td class="num">' + jour(c.date) + '</td><td>' + places(c) + '</td><td class="num r">' + vendus(c) + '/' + c.qte + '</td><td class="num r">' + prixAff(c, c.prix) + '</td><td class="num r">' + (c.annonce ? eur(c.annonce.prix) : '—') + '</td><td>' + pill(c) + '</td><td>' + c.site + '</td></tr>').join('');
+  const rows = liste.map(c => '<tr class="click" data-detail="' + c.id + '"><td class="ev">' + c.ev + '<small>' + c.lieu + '</small></td><td class="num">' + jour(c.date) + '</td><td>' + places(c) + '</td><td class="num r">' + vendus(c) + '/' + c.qte + '</td><td class="num r">' + prixAff(c, c.prix) + '</td><td class="num r">' + (c.annonce ? eur(c.annonce.prix) : '—') + '</td><td>' + pill(c) + (aCompleter(c) ? ' <span class="pill p-attente">Places à compléter</span>' : '') + '</td><td>' + c.site + '</td></tr>').join('');
   return bandeau +
     '<div class="head"><div><h1>Billets</h1><p class="sub">' + commandes.length + ' commandes importées automatiquement depuis les emails Viagogo et StubHub</p></div></div>' +
     '<div class="toolbar">' + filtres.map(f => '<button class="chip" data-filtre="' + f[0] + '" aria-pressed="' + (filtre === f[0]) + '">' + f[1] + '</button>').join('') +
@@ -321,20 +343,43 @@ function vueDetail() {
     c.ventes.map(v => { const p = profitVente(c, v); return '<tr><td class="num">' + v.id + '</td><td class="num">' + jour(v.le) + '</td><td class="num r">' + v.qte + '</td><td class="num r">' + eur(v.montant) + '</td><td class="num r ' + (p >= 0 ? 'pos' : 'neg') + '">' + eur(p) + '</td><td>' + (v.paye ? '<span class="pill p-vendu">Payé</span>' : '<span class="pill p-attente">En attente</span>') + '</td></tr>'; }).join('') +
     '</tbody></table></div>' : '<p class="sub">Aucune vente pour l\'instant.</p>';
 
+  const tag = k => c.auto[k] ? '<span class="tag auto">auto</span>' : (c[k] ? '<span class="tag main">ajouté par vous</span>' : (k !== 'bloc' && c.libre ? '<span class="tag main">non numéroté</span>' : '<span class="tag manque">à compléter</span>'));
+  const esc = v => String(v || '').replace(/"/g, '&quot;');
+  const manque = manquants(c);
+  const placesHtml = '<section class="panel" style="margin-bottom:16px"><h2>Places</h2>' +
+    (actif(c) && manque.length
+      ? '<p class="alerte">Le site n\'a pas trouvé ' + manque.join(', ').replace(/, ([^,]*)$/, ' et $1') + ' dans l\'email ' + c.site + '. Complétez-les ici avant la mise en vente. Si les places ne sont pas numérotées (fosse, pelouse), cochez « Placement libre ».</p>'
+      : '<p class="sub">Lu automatiquement dans l\'email ' + c.site + '. Corrigez si besoin : c\'est cette version qui part sur Seatiks.</p>') +
+    '<form class="inline" id="form-places">' +
+      '<label class="field">Bloc ' + tag('bloc') + '<input id="pl-bloc" value="' + esc(c.bloc) + '" required></label>' +
+      '<label class="field">Rang ' + tag('rang') + '<input id="pl-rang" value="' + esc(c.rang) + '" placeholder="ex. 13"' + (c.libre ? ' disabled' : '') + '></label>' +
+      '<label class="field">Sièges ' + tag('sieges') + '<input id="pl-sieges" value="' + esc(c.sieges) + '" placeholder="ex. 35-36"' + (c.libre ? ' disabled' : '') + '></label>' +
+      '<label class="check"><input type="checkbox" id="pl-libre"' + (c.libre ? ' checked' : '') + '> Placement libre</label>' +
+      '<button class="btn" type="submit">Enregistrer les places</button></form>' +
+    '<div class="seatiks-sec"><span>Section sur Seatiks : ' + (c.seatiks.section
+      ? '<b>' + c.seatiks.section + '</b><span class="tag ' + (c.seatiks.auto ? 'auto">trouvée automatiquement' : 'main">choisie par vous') + '</span>'
+      : '<span class="tag manque">pas trouvée</span>') + '</span>' +
+      (c.seatiks.choix.length ? '<label class="field">' + (c.seatiks.section ? 'Changer la section' : 'Choisissez la section Seatiks') + '<select id="pl-section"><option value="">Choisir…</option>' +
+        c.seatiks.choix.map(o => '<option' + (o === c.seatiks.section ? ' selected' : '') + '>' + o + '</option>').join('') + '</select></label>' : '') +
+    '</div></section>';
+
   let annonceHtml;
   if (c.rembourse || c.annulee) annonceHtml = '<p class="sub">Commande ' + (c.rembourse ? 'remboursée' : 'probablement annulée') + ' : pas de mise en vente.</p>';
   else if (reste <= 0) annonceHtml = '<p class="sub">Tous les billets sont vendus.</p>';
+  else if (aCompleter(c)) annonceHtml = '<p class="alerte">Complétez d\'abord les places au-dessus' + (c.seatiks.section ? '' : ' et choisissez la section Seatiks') + ' : le site ne publie rien d\'incomplet sur Seatiks.</p>';
   else annonceHtml =
     (c.annonce && c.annonce.active ? '<p>En vente sur Seatiks à <b class="num">' + eur(c.annonce.prix) + '</b> par billet, ' + reste + ' billet(s), toutes les plateformes.</p>' : '<p class="sub">Pas en vente pour l\'instant. ' + reste + ' billet(s) disponible(s).</p>') +
     '<form class="inline" id="form-annonce"><label class="field">Prix par billet (€)<input id="prix-annonce" type="number" min="1" step="0.01" inputmode="decimal" value="' + (c.annonce ? c.annonce.prix : '') + '" required></label>' +
     '<button class="btn primary" type="submit">' + (c.annonce && c.annonce.active ? 'Changer le prix' : 'Mettre en vente sur Seatiks') + '</button>' +
     (c.annonce && c.annonce.active ? '<button class="btn danger" type="button" id="retirer">Retirer de la vente</button>' : '') + '</form>' +
+    '<p class="note">Sera publié : ' + c.seatiks.section + (c.libre ? ' · placement libre' : ' · rang ' + c.rang + ' · sièges ' + c.sieges) + ' · ' + reste + ' billet(s).</p>' +
     '<p class="note">E-ticket · tous les billets ensemble · toutes les plateformes · n° de commande ' + c.site + ' en note interne. Marge si tout se vend à ce prix : <b class="num" id="marge">' + (c.annonce ? eur(c.annonce.prix * reste * 0.9 - coutUnitaire(c) * reste) : '—') + '</b> (estimation, après environ 10 % de frais).</p>';
 
   return bandeau +
     '<div class="head"><button class="link" data-aller="billets">← Retour aux billets</button></div>' +
     '<div class="ticket"><div class="ticket-main"><div>' + pill(c) + '</div><div class="ev-big" style="margin-top:8px">' + c.ev + '</div><div class="meta">' + c.lieu + ' · ' + new Date(c.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</div></div>' +
       '<div class="stub"><div><div class="k">Bloc</div><div class="v">' + c.bloc + '</div></div><div><div class="k">Rang</div><div class="v">' + (c.rang || '—') + '</div></div><div><div class="k">Sièges</div><div class="v">' + (c.sieges || '—') + '</div></div><div class="qty">' + c.qte + ' billet(s) · ' + vendus(c) + ' vendu(s)</div></div></div>' +
+    placesHtml +
     '<div class="grid2">' +
       '<section class="panel"><h2>Mise en vente Seatiks</h2>' + annonceHtml + '<h2 style="margin-top:20px">Ventes</h2>' + ventesHtml + '</section>' +
       '<section class="panel"><h2>Bénéfice</h2><div class="profit-big ' + (profit >= 0 ? 'pos' : 'neg') + '">' + eur(profit) + '</div>' +
@@ -403,6 +448,24 @@ function brancher() {
   }));
 
   const c = commandes.find(x => x.id === detailId);
+  const fp = document.getElementById('form-places');
+  if (fp) {
+    const libre = document.getElementById('pl-libre');
+    libre.addEventListener('change', () => { ['pl-rang', 'pl-sieges'].forEach(id => { document.getElementById(id).disabled = libre.checked; }); });
+    fp.addEventListener('submit', e => {
+      e.preventDefault();
+      [['bloc', 'pl-bloc'], ['rang', 'pl-rang'], ['sieges', 'pl-sieges']].forEach(([k, id]) => {
+        const v = document.getElementById(id).value.trim();
+        if (v !== c[k]) { c[k] = v; c.auto[k] = false; }
+      });
+      c.libre = libre.checked;
+      if (c.seatiks.auto) c.seatiks.section = c.libre ? c.bloc : 'Block ' + c.bloc;
+      rendre();
+      toast(c.annonce && c.annonce.active ? 'Places enregistrées, annonce Seatiks mise à jour (simulation).' : 'Places enregistrées. Elles seront utilisées pour l\'annonce Seatiks.');
+    });
+  }
+  const ps = document.getElementById('pl-section');
+  if (ps) ps.addEventListener('change', () => { if (!ps.value) return; c.seatiks.section = ps.value; c.seatiks.auto = false; rendre(); toast('Section Seatiks choisie : ' + ps.value + '.'); });
   const fa = document.getElementById('form-annonce');
   if (fa) {
     const champ = document.getElementById('prix-annonce');
