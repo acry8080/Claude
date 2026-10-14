@@ -1,0 +1,439 @@
+<title>Revente Billets</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: application à deux zones — navigation (colonne à gauche, barre en bas sur téléphone) et vue courante ; typo d'affichage façon panneau de stade */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #eaeef4;
+  --ink: #17202e;
+  --muted: #5d6879;
+  --line: #d8dee8;
+  --accent: #2446c7;
+  --accent-soft: #e3e9fb;
+  --on-accent: #ffffff;
+  --good: #19794a;
+  --good-soft: #dff2e7;
+  --warn: #9a6200;
+  --warn-soft: #fbefd6;
+  --bad: #b3261e;
+  --bad-soft: #fbe2df;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f141c; --surface: #171e29; --surface-2: #1f2835; --ink: #e8edf5; --muted: #98a3b5; --line: #2a3443;
+  --accent: #7d98ff; --accent-soft: #1f2a4d; --on-accent: #0b1020;
+  --good: #5fd39a; --good-soft: #143426; --warn: #f2bf5e; --warn-soft: #3a2c10; --bad: #ff8a80; --bad-soft: #3d1a18;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f141c; --surface: #171e29; --surface-2: #1f2835; --ink: #e8edf5; --muted: #98a3b5; --line: #2a3443;
+  --accent: #7d98ff; --accent-soft: #1f2a4d; --on-accent: #0b1020;
+  --good: #5fd39a; --good-soft: #143426; --warn: #f2bf5e; --warn-soft: #3a2c10; --bad: #ff8a80; --bad-soft: #3d1a18;
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100%; }
+nav.side { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; padding: 20px 14px; border-right: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 4px; }
+.brand { font: 700 1.5rem/1 var(--display); letter-spacing: .02em; text-transform: uppercase; padding: 4px 10px 18px; }
+.brand small { display: block; font: 500 .72rem var(--body); letter-spacing: .08em; color: var(--muted); margin-top: 6px; }
+nav.side button { display: flex; align-items: center; gap: 10px; text-align: left; border: 0; background: none; padding: 9px 10px; border-radius: 8px; color: var(--muted); font-weight: 500; }
+nav.side button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+nav.side button:hover { color: var(--ink); }
+nav.side svg, nav.bottom svg { width: 18px; height: 18px; flex: none; }
+.side-foot { margin-top: auto; font-size: .78rem; color: var(--muted); padding: 10px; border-top: 1px solid var(--line); }
+nav.bottom { display: none; }
+
+main { min-width: 0; padding-block: 24px 48px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); max-width: 1180px; width: 100%; }
+.demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-size: .86rem; margin-bottom: 20px; }
+.demo strong { font-weight: 600; }
+.head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+h1 { font: 700 2.1rem/1.05 var(--display); text-transform: uppercase; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h2 { font: 600 1.15rem/1.2 var(--display); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 12px; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.kpi .lbl { font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.kpi .val { font: 600 2rem/1.1 var(--display); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.kpi .hint { font-size: .82rem; color: var(--muted); }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 10px; align-items: center; font-size: .88rem; }
+.bar-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { grid-column: 1 / -1; height: 8px; background: var(--surface-2); border-radius: 4px; position: relative; overflow: hidden; }
+.bar-fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.bar-zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--muted); }
+.bar-row .num { text-align: right; }
+
+.todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.todo li { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); }
+.todo li > span:first-child { min-width: 0; }
+.todo b { font-weight: 600; }
+.count { font: 600 1.2rem var(--display); min-width: 2ch; text-align: right; }
+
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .86rem; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.search { margin-left: auto; min-width: 0; flex: 0 1 240px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; }
+
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; min-width: 760px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; background: var(--surface-2); }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr.click { cursor: pointer; }
+tbody tr.click:hover td { background: var(--surface-2); }
+td.r, th.r { text-align: right; }
+.ev { font-weight: 600; }
+.ev small { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; }
+tfoot td { font-weight: 600; background: var(--surface-2); }
+
+.pill { display: inline-block; white-space: nowrap; font-size: .76rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+.p-list { background: var(--surface-2); color: var(--muted); }
+.p-vente { background: var(--accent-soft); color: var(--accent); }
+.p-vendu { background: var(--good-soft); color: var(--good); }
+.p-partiel { background: var(--good-soft); color: var(--good); }
+.p-annule { background: var(--warn-soft); color: var(--warn); }
+.p-rembourse { background: var(--bad-soft); color: var(--bad); }
+.p-attente { background: var(--warn-soft); color: var(--warn); }
+
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px; font-weight: 600; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn.danger { color: var(--bad); }
+.btn.small { padding: 4px 10px; font-size: .84rem; }
+.link { border: 0; background: none; color: var(--accent); padding: 0; font-weight: 600; }
+
+/* Détail : le billet, avec son talon perforé */
+.ticket { display: grid; grid-template-columns: minmax(0, 1fr) 190px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+.ticket-main { padding: 18px 20px; min-width: 0; }
+.ticket-main .ev-big { font: 700 1.9rem/1.05 var(--display); text-transform: uppercase; text-wrap: balance; }
+.ticket-main .meta { color: var(--muted); margin-top: 6px; }
+.stub { position: relative; border-left: 2px dashed var(--line); padding: 18px 16px; background: var(--surface-2); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; align-content: center; text-align: center; }
+.stub::before, .stub::after { content: ""; position: absolute; left: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
+.stub::before { top: -11px; } .stub::after { bottom: -11px; }
+.stub .k { font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.stub .v { font: 700 1.5rem/1.1 var(--display); }
+.stub .qty { grid-column: 1 / -1; margin-top: 8px; font-size: .82rem; color: var(--muted); }
+
+.dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; font-size: .92rem; }
+.dl dt { color: var(--muted); }
+.dl dd { margin: 0; overflow-wrap: anywhere; }
+.profit-big { font: 600 2.2rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; font-size: .9rem; margin-top: 10px; }
+.calc .num { text-align: right; }
+.calc .total { border-top: 1px solid var(--line); padding-top: 6px; font-weight: 600; }
+
+form.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+.field { display: grid; gap: 4px; font-size: .82rem; color: var(--muted); }
+.field input, .field select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; color: var(--ink); width: 130px; font-size: .95rem; }
+.field.wide input { width: 220px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.note { font-size: .84rem; color: var(--muted); margin: 8px 0 0; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 8px; font-weight: 500; max-width: calc(100% - 32px); z-index: 20; }
+
+@media (max-width: 980px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  nav.side { display: none; }
+  nav.bottom { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+  nav.bottom button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; font-size: .72rem; color: var(--muted); padding: 4px; }
+  nav.bottom button[aria-current="page"] { color: var(--accent); }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  h1 { font-size: 1.7rem; }
+  .ticket { grid-template-columns: minmax(0, 1fr); }
+  .stub { border-left: 0; border-top: 2px dashed var(--line); }
+  .stub::before, .stub::after { display: none; }
+  .search { margin-left: 0; flex: 1 1 100%; }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: no-preference) { .toast { animation: monte .18s ease-out; } }
+@keyframes monte { from { opacity: 0; transform: translate(-50%, 8px); } }
+</style>
+
+<div class="app">
+  <nav class="side" aria-label="Navigation">
+    <div class="brand">Revente Billets<small>Viagogo · StubHub · Seatiks</small></div>
+    <button data-vue="tableau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 7h6V4h-6z"/></svg>Tableau de bord</button>
+    <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/><path d="M14 4v12" stroke-dasharray="2 2"/></svg>Billets</button>
+    <button data-vue="ventes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>Ventes</button>
+    <button data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Dépenses</button>
+    <div class="side-foot">Seatiks connecté (mode réel)<br>Dernier import d'emails : il y a 2 min</div>
+  </nav>
+
+  <main id="vue" aria-live="polite"></main>
+
+  <nav class="bottom" aria-label="Navigation">
+    <button data-vue="tableau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 7h6V4h-6z"/></svg>Tableau</button>
+    <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg>Billets</button>
+    <button data-vue="ventes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>Ventes</button>
+    <button data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Dépenses</button>
+  </nav>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+// ---------- Données d'exemple (la maquette ne touche à rien de réel) ----------
+const AUJOURDHUI = new Date('2026-10-14T12:00:00');
+const commandes = [
+  { id: '656921075', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-10-05', bloc: '13C', rang: '', sieges: '', qte: 2, prix: 182.09, mail: 'quai.nord47@icloud.com', nom: 'Hugo', carte: 'Apple Pay', annonce: { prix: 155, active: true }, ventes: [], rembourse: false, annulee: false },
+  { id: '655651277', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-09-28', bloc: '11C', rang: '13', sieges: '35-36', qte: 2, prix: 543.29, mail: 'tribune.est12@icloud.com', nom: 'Lena Brandt', carte: '3392', annonce: { prix: 320, active: false }, ventes: [{ id: 'SK-48812', le: '2026-10-09', qte: 2, montant: 612.4, paye: true }], rembourse: false, annulee: false },
+  { id: '656373947', site: 'StubHub', ev: 'Borussia Dortmund vs Eintracht Frankfurt', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-07', bloc: '54', rang: '', sieges: '', qte: 2, prix: 237.4, devise: 'USD', mail: 'mur.jaune09@icloud.com', nom: 'Victoria', carte: '4452', annonce: null, ventes: [], rembourse: false, annulee: false },
+  { id: '656372126', site: 'StubHub', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-10-07', bloc: 'S4', rang: '', sieges: '', qte: 2, prix: 443.48, devise: 'USD', mail: 'rhein.ufer33@icloud.com', nom: 'Fanny', carte: '4452', annonce: null, ventes: [], rembourse: false, annulee: true },
+  { id: '655852602', site: 'Viagogo', ev: 'FC Bayern München vs RB Leipzig', lieu: 'Allianz Arena', date: '2026-10-17', achat: '2026-09-30', bloc: 'Lower Tier 112', rang: '8', sieges: '21-24', qte: 4, prix: 1007.02, mail: 'arena.rouge71@icloud.com', nom: 'Mathis Lampene', carte: '3392', annonce: { prix: 330, active: true }, ventes: [{ id: 'SK-48877', le: '2026-10-12', qte: 2, montant: 690, paye: false }], rembourse: false, annulee: false },
+  { id: '656569417', site: 'Viagogo', ev: 'Stevie Wonder', lieu: 'Accor Arena, Paris', date: '2026-10-15', achat: '2026-09-21', bloc: 'Upper S', rang: '88', sieges: '23-24', qte: 2, prix: 1169.97, mail: 'scene.bleue04@icloud.com', nom: 'Audrey Laga', carte: '3104', annonce: { prix: 690, active: false }, ventes: [{ id: 'SK-48790', le: '2026-10-03', qte: 2, montant: 1288, paye: true }], rembourse: false, annulee: false },
+  { id: '656600391', site: 'Viagogo', ev: 'Stevie Wonder', lieu: 'Accor Arena, Paris', date: '2026-10-15', achat: '2026-09-22', bloc: 'Lower U', rang: '23', sieges: '25-26', qte: 2, prix: 1486.15, mail: 'scene.bleue04@icloud.com', nom: 'Sebastien Ploch', carte: '3104', annonce: { prix: 700, active: false }, ventes: [{ id: 'SK-48791', le: '2026-10-04', qte: 2, montant: 1372, paye: true }], rembourse: false, annulee: false },
+  { id: '656659037', site: 'Viagogo', ev: 'Muse', lieu: 'Stade de France', date: '2026-11-27', achat: '2026-10-10', bloc: 'Fosse', rang: '', sieges: '', qte: 4, prix: 844.21, mail: 'fosse.or18@icloud.com', nom: 'Croyance Barna', carte: 'Apple Pay', annonce: null, ventes: [], rembourse: false, annulee: false },
+  { id: '656175443', site: 'Viagogo', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-09-18', bloc: '014', rang: '12', sieges: '16-17', qte: 2, prix: 497.9, mail: 'dom.vert56@icloud.com', nom: 'Cecile Fabre', carte: '3392', annonce: { prix: 230, active: false }, ventes: [{ id: 'SK-48702', le: '2026-10-08', qte: 2, montant: 438.6, paye: true }], rembourse: false, annulee: false },
+  { id: '656227224', site: 'Viagogo', ev: 'Borussia Dortmund vs Werder Bremen', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-02', bloc: '63', rang: '', sieges: '', qte: 4, prix: 861.23, mail: 'mur.jaune09@icloud.com', nom: 'Thomas Stefe', carte: '4452', annonce: { prix: 260, active: true }, ventes: [], rembourse: false, annulee: false },
+  { id: '656061209', site: 'Viagogo', ev: 'Céline Dion', lieu: 'Paris La Défense Arena', date: '2026-09-19', achat: '2026-08-30', bloc: 'Cat. 1', rang: '14', sieges: '7-8', qte: 2, prix: 895.38, mail: 'nuit.claire22@icloud.com', nom: 'Khalida Amrani', carte: '3392', annonce: { prix: 450, active: false }, ventes: [{ id: 'SK-48311', le: '2026-09-10', qte: 2, montant: 900, paye: true }], rembourse: false, annulee: false },
+  { id: '655554004', site: 'Viagogo', ev: 'England vs Spain', lieu: 'Wembley Stadium', date: '2026-09-26', achat: '2026-09-02', bloc: '135', rang: '27', sieges: '39-40', qte: 2, prix: 492.33, mail: 'tribune.est12@icloud.com', nom: 'Fernand Leone', carte: '3104', annonce: null, ventes: [], rembourse: true, annulee: false },
+];
+const autresDepenses = [
+  { le: '2026-10-01', libelle: 'Nom de domaine du site', montant: 10.99 },
+  { le: '2026-09-15', libelle: 'Abonnement iCloud+', montant: 2.99 },
+  { le: '2026-10-01', libelle: 'Abonnement iCloud+', montant: 2.99 },
+];
+
+// ---------- Calculs ----------
+const eur = n => (n < 0 ? '−' : '') + Math.abs(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const sym = c => c.devise === 'USD' ? ' $' : ' €';
+const prixAff = (c, n) => Math.abs(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + sym(c);
+const jour = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const jourCourt = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+const vendus = c => c.ventes.reduce((s, v) => s + v.qte, 0);
+const coutUnitaire = c => c.prix / c.qte;
+const profitVente = (c, v) => v.montant - coutUnitaire(c) * v.qte;
+const places = c => c.rang ? [c.bloc, c.rang, c.sieges].filter(Boolean).join(' / ') : 'x' + c.qte + ' ' + c.bloc;
+const passe = c => new Date(c.date + 'T23:59:00') < AUJOURDHUI;
+
+function statut(c) {
+  if (c.rembourse) return { cle: 'rembourse', txt: 'Remboursé' };
+  if (c.annulee) return { cle: 'annule', txt: 'Annulation probable' };
+  const v = vendus(c);
+  if (v >= c.qte) return { cle: 'vendu', txt: 'Vendu' };
+  if (v > 0) return { cle: 'partiel', txt: 'Vendu ' + v + '/' + c.qte };
+  if (c.annonce && c.annonce.active) return { cle: 'vente', txt: 'En vente' };
+  return { cle: 'list', txt: 'À lister' };
+}
+const pill = c => { const s = statut(c); return '<span class="pill p-' + s.cle + '">' + s.txt + '</span>'; };
+
+function totaux() {
+  let profit = 0, aRecevoir = 0, stockValeur = 0, stockBillets = 0, depenses = 0, chiffre = 0;
+  commandes.forEach(c => {
+    if (!c.rembourse) depenses += c.prix;
+    c.ventes.forEach(v => { profit += profitVente(c, v); chiffre += v.montant; if (!v.paye) aRecevoir += v.montant; });
+    const reste = c.qte - vendus(c);
+    if (!c.rembourse && !c.annulee && reste > 0) { stockBillets += reste; stockValeur += reste * coutUnitaire(c); }
+  });
+  depenses += autresDepenses.reduce((s, d) => s + d.montant, 0);
+  return { profit, aRecevoir, stockValeur, stockBillets, depenses, chiffre };
+}
+
+// ---------- Vues ----------
+let vueCourante = 'tableau', filtre = 'tous', recherche = '', detailId = null;
+const $vue = document.getElementById('vue');
+const bandeau = '<div class="demo"><strong>Maquette</strong> Toutes les commandes et ventes ici sont des exemples. Les boutons fonctionnent, mais rien n\'est envoyé à Seatiks.</div>';
+
+function vueTableau() {
+  const t = totaux();
+  const parEv = {};
+  commandes.forEach(c => c.ventes.forEach(v => { parEv[c.ev] = (parEv[c.ev] || 0) + profitVente(c, v); }));
+  const lignes = Object.entries(parEv).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...lignes.map(l => Math.abs(l[1])));
+  const aNeg = lignes.some(l => l[1] < 0);
+  const zero = aNeg ? 50 : 0; // en % : axe au milieu s'il y a des pertes
+  const echelle = aNeg ? 50 : 100;
+  const bars = lignes.map(([ev, p]) => {
+    const w = Math.abs(p) / max * echelle;
+    const left = p >= 0 ? zero : zero - w;
+    return '<div class="bar-row"><span class="bar-name">' + ev + '</span><span class="num ' + (p >= 0 ? 'pos' : 'neg') + '">' + eur(p) + '</span>' +
+      '<div class="bar-track"><div class="bar-fill" style="left:' + left + '%;width:' + w + '%;background:var(' + (p >= 0 ? '--good' : '--bad') + ')"></div>' + (aNeg ? '<div class="bar-zero" style="left:50%"></div>' : '') + '</div></div>';
+  }).join('');
+
+  const aLister = commandes.filter(c => statut(c).cle === 'list' && !passe(c));
+  const nonPayees = commandes.flatMap(c => c.ventes.filter(v => !v.paye));
+  const annulees = commandes.filter(c => c.annulee && !c.rembourse);
+  const bientot = commandes.filter(c => { const r = c.qte - vendus(c); const j = (new Date(c.date) - AUJOURDHUI) / 864e5; return r > 0 && !c.rembourse && !c.annulee && j >= 0 && j <= 7; });
+
+  return bandeau +
+    '<div class="head"><div><h1>Tableau de bord</h1><p class="sub">Au ' + AUJOURDHUI.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + '</p></div></div>' +
+    '<div class="kpis">' +
+      '<div class="kpi"><div class="lbl">Bénéfice réalisé</div><div class="val ' + (t.profit >= 0 ? 'pos' : 'neg') + '">' + eur(t.profit) + '</div><div class="hint">sur ' + eur(t.chiffre) + ' de ventes</div></div>' +
+      '<div class="kpi"><div class="lbl">Argent à recevoir</div><div class="val">' + eur(t.aRecevoir) + '</div><div class="hint">' + nonPayees.length + ' vente(s) pas encore payée(s)</div></div>' +
+      '<div class="kpi"><div class="lbl">Billets non vendus</div><div class="val">' + t.stockBillets + '</div><div class="hint">' + eur(t.stockValeur) + ' payés à l\'achat</div></div>' +
+      '<div class="kpi"><div class="lbl">Dépenses totales</div><div class="val">' + eur(t.depenses) + '</div><div class="hint">achats + autres frais</div></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+      '<section class="panel"><h2>Bénéfice par événement</h2><div class="bars">' + (bars || '<p class="sub">Aucune vente pour l\'instant.</p>') + '</div></section>' +
+      '<section class="panel"><h2>À faire</h2><ul class="todo">' +
+        '<li><span><b>À mettre en vente</b><br><span class="sub">Billets achetés, pas encore listés</span></span><span class="count">' + aLister.length + '</span></li>' +
+        '<li><span><b>Match ou concert dans moins de 7 jours</b><br><span class="sub">Il reste des billets à vendre</span></span><span class="count">' + bientot.length + '</span></li>' +
+        '<li><span><b>Paiements en attente</b><br><span class="sub">Ventes Seatiks pas encore payées</span></span><span class="count">' + nonPayees.length + '</span></li>' +
+        '<li><span><b>Annulations probables</b><br><span class="sub">StubHub : « a further email »</span></span><span class="count">' + annulees.length + '</span></li>' +
+      '</ul><div class="actions"><button class="btn" data-aller="billets" data-filtre="list">Voir les billets à lister</button></div></section>' +
+    '</div>';
+}
+
+function vueBillets() {
+  const filtres = [['tous', 'Tous'], ['list', 'À lister'], ['vente', 'En vente'], ['vendu', 'Vendus'], ['annule', 'Annulés / remboursés']];
+  const liste = commandes.filter(c => {
+    const s = statut(c).cle;
+    const okFiltre = filtre === 'tous' || (filtre === 'vendu' ? (s === 'vendu' || s === 'partiel') : filtre === 'annule' ? (s === 'annule' || s === 'rembourse') : s === filtre);
+    return okFiltre && (c.ev + ' ' + c.id + ' ' + c.bloc).toLowerCase().includes(recherche.toLowerCase());
+  }).sort((a, b) => a.date.localeCompare(b.date));
+  const rows = liste.map(c => '<tr class="click" data-detail="' + c.id + '"><td class="ev">' + c.ev + '<small>' + c.lieu + '</small></td><td class="num">' + jour(c.date) + '</td><td>' + places(c) + '</td><td class="num r">' + vendus(c) + '/' + c.qte + '</td><td class="num r">' + prixAff(c, c.prix) + '</td><td class="num r">' + (c.annonce ? eur(c.annonce.prix) : '—') + '</td><td>' + pill(c) + '</td><td>' + c.site + '</td></tr>').join('');
+  return bandeau +
+    '<div class="head"><div><h1>Billets</h1><p class="sub">' + commandes.length + ' commandes importées automatiquement depuis les emails Viagogo et StubHub</p></div></div>' +
+    '<div class="toolbar">' + filtres.map(f => '<button class="chip" data-filtre="' + f[0] + '" aria-pressed="' + (filtre === f[0]) + '">' + f[1] + '</button>').join('') +
+    '<input class="search" id="recherche" type="search" placeholder="Rechercher un événement, un n° de commande…" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher"></div>' +
+    '<div class="table-wrap"><table><thead><tr><th>Événement</th><th>Date</th><th>Places</th><th class="r">Vendus</th><th class="r">Prix d\'achat</th><th class="r">Prix annonce (par billet)</th><th>Statut</th><th>Acheté sur</th></tr></thead><tbody>' +
+    (rows || '<tr><td colspan="8" class="sub">Aucun billet ne correspond.</td></tr>') + '</tbody></table></div>';
+}
+
+function vueDetail() {
+  const c = commandes.find(x => x.id === detailId);
+  const reste = c.qte - vendus(c);
+  const profit = c.ventes.reduce((s, v) => s + profitVente(c, v), 0);
+  const recu = c.ventes.reduce((s, v) => s + v.montant, 0);
+  const coutVendu = coutUnitaire(c) * vendus(c);
+  const ventesHtml = c.ventes.length ? '<div class="table-wrap" style="margin-top:8px"><table style="min-width:520px"><thead><tr><th>Vente</th><th>Date</th><th class="r">Billets</th><th class="r">Reçu</th><th class="r">Bénéfice</th><th>Paiement</th></tr></thead><tbody>' +
+    c.ventes.map(v => { const p = profitVente(c, v); return '<tr><td class="num">' + v.id + '</td><td class="num">' + jour(v.le) + '</td><td class="num r">' + v.qte + '</td><td class="num r">' + eur(v.montant) + '</td><td class="num r ' + (p >= 0 ? 'pos' : 'neg') + '">' + eur(p) + '</td><td>' + (v.paye ? '<span class="pill p-vendu">Payé</span>' : '<span class="pill p-attente">En attente</span>') + '</td></tr>'; }).join('') +
+    '</tbody></table></div>' : '<p class="sub">Aucune vente pour l\'instant.</p>';
+
+  let annonceHtml;
+  if (c.rembourse || c.annulee) annonceHtml = '<p class="sub">Commande ' + (c.rembourse ? 'remboursée' : 'probablement annulée') + ' : pas de mise en vente.</p>';
+  else if (reste <= 0) annonceHtml = '<p class="sub">Tous les billets sont vendus.</p>';
+  else annonceHtml =
+    (c.annonce && c.annonce.active ? '<p>En vente sur Seatiks à <b class="num">' + eur(c.annonce.prix) + '</b> par billet, ' + reste + ' billet(s), toutes les plateformes.</p>' : '<p class="sub">Pas en vente pour l\'instant. ' + reste + ' billet(s) disponible(s).</p>') +
+    '<form class="inline" id="form-annonce"><label class="field">Prix par billet (€)<input id="prix-annonce" type="number" min="1" step="0.01" inputmode="decimal" value="' + (c.annonce ? c.annonce.prix : '') + '" required></label>' +
+    '<button class="btn primary" type="submit">' + (c.annonce && c.annonce.active ? 'Changer le prix' : 'Mettre en vente sur Seatiks') + '</button>' +
+    (c.annonce && c.annonce.active ? '<button class="btn danger" type="button" id="retirer">Retirer de la vente</button>' : '') + '</form>' +
+    '<p class="note">E-ticket · tous les billets ensemble · toutes les plateformes · n° de commande ' + c.site + ' en note interne. Marge si tout se vend à ce prix : <b class="num" id="marge">' + (c.annonce ? eur(c.annonce.prix * reste * 0.9 - coutUnitaire(c) * reste) : '—') + '</b> (estimation, après environ 10 % de frais).</p>';
+
+  return bandeau +
+    '<div class="head"><button class="link" data-aller="billets">← Retour aux billets</button></div>' +
+    '<div class="ticket"><div class="ticket-main"><div>' + pill(c) + '</div><div class="ev-big" style="margin-top:8px">' + c.ev + '</div><div class="meta">' + c.lieu + ' · ' + new Date(c.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</div></div>' +
+      '<div class="stub"><div><div class="k">Bloc</div><div class="v">' + c.bloc + '</div></div><div><div class="k">Rang</div><div class="v">' + (c.rang || '—') + '</div></div><div><div class="k">Sièges</div><div class="v">' + (c.sieges || '—') + '</div></div><div class="qty">' + c.qte + ' billet(s) · ' + vendus(c) + ' vendu(s)</div></div></div>' +
+    '<div class="grid2">' +
+      '<section class="panel"><h2>Mise en vente Seatiks</h2>' + annonceHtml + '<h2 style="margin-top:20px">Ventes</h2>' + ventesHtml + '</section>' +
+      '<section class="panel"><h2>Bénéfice</h2><div class="profit-big ' + (profit >= 0 ? 'pos' : 'neg') + '">' + eur(profit) + '</div>' +
+        '<div class="calc"><span>Reçu pour ' + vendus(c) + ' billet(s)</span><span class="num">' + eur(recu) + '</span><span>Coût de ces billets</span><span class="num">' + eur(-coutVendu) + '</span><span class="total">Bénéfice</span><span class="num total">' + eur(profit) + '</span></div>' +
+        '<h2 style="margin-top:20px">Commande</h2><dl class="dl"><dt>N° ' + c.site + '</dt><dd class="num">' + c.id + '</dd><dt>Achetée le</dt><dd>' + jour(c.achat) + '</dd><dt>Prix d\'achat</dt><dd class="num">' + prixAff(c, c.prix) + ' (' + prixAff(c, coutUnitaire(c)) + ' / billet)</dd><dt>Adresse</dt><dd>' + c.mail + '</dd><dt>Nom</dt><dd>' + c.nom + '</dd><dt>Paiement</dt><dd>' + (/^\d{4}$/.test(c.carte) ? 'Carte •••• ' + c.carte : c.carte) + '</dd></dl>' +
+        '<div class="actions">' + (c.rembourse ? '<button class="btn" id="rembourse">Annuler « remboursé »</button>' : '<button class="btn" id="rembourse">Marquer comme remboursé</button>') +
+        (reste > 0 && !c.rembourse ? '<button class="btn" id="vente-main">Ajouter une vente à la main</button>' : '') + '</div>' +
+        '<form class="inline" id="form-vente" hidden style="margin-top:12px"><label class="field">Billets<input id="vm-qte" type="number" min="1" max="' + reste + '" value="' + reste + '" required></label><label class="field">Montant reçu (€)<input id="vm-montant" type="number" min="0" step="0.01" required></label><button class="btn primary" type="submit">Enregistrer</button></form>' +
+      '</section>' +
+    '</div>';
+}
+
+function vueVentes() {
+  const lignes = commandes.flatMap(c => c.ventes.map(v => ({ c, v }))).sort((a, b) => b.v.le.localeCompare(a.v.le));
+  let tRecu = 0, tCout = 0;
+  const rows = lignes.map(({ c, v }) => {
+    const cout = coutUnitaire(c) * v.qte, p = v.montant - cout; tRecu += v.montant; tCout += cout;
+    return '<tr class="click" data-detail="' + c.id + '"><td class="num">' + jour(v.le) + '</td><td class="ev">' + c.ev + '<small>' + places(c) + '</small></td><td class="num r">' + v.qte + '</td><td class="num r">' + eur(v.montant) + '</td><td class="num r">' + eur(cout) + '</td><td class="num r ' + (p >= 0 ? 'pos' : 'neg') + '">' + eur(p) + '</td><td class="num r">' + Math.round(p / cout * 100) + ' %</td><td><button class="pill ' + (v.paye ? 'p-vendu' : 'p-attente') + '" style="border:0" data-payer="' + c.id + '|' + v.id + '" title="Cliquer pour changer">' + (v.paye ? 'Payé' : 'En attente') + '</button></td></tr>';
+  }).join('');
+  const pT = tRecu - tCout;
+  return bandeau +
+    '<div class="head"><div><h1>Ventes</h1><p class="sub">Bénéfice de chaque vente = montant reçu de Seatiks − prix d\'achat des billets vendus</p></div></div>' +
+    '<div class="table-wrap"><table><thead><tr><th>Vendu le</th><th>Événement</th><th class="r">Billets</th><th class="r">Reçu</th><th class="r">Coût</th><th class="r">Bénéfice</th><th class="r">Marge</th><th>Paiement</th></tr></thead><tbody>' + rows + '</tbody>' +
+    '<tfoot><tr><td colspan="3">Total (' + lignes.length + ' ventes)</td><td class="num r">' + eur(tRecu) + '</td><td class="num r">' + eur(tCout) + '</td><td class="num r ' + (pT >= 0 ? 'pos' : 'neg') + '">' + eur(pT) + '</td><td class="num r">' + (tCout ? Math.round(pT / tCout * 100) : 0) + ' %</td><td></td></tr></tfoot></table></div>';
+}
+
+function vueDepenses() {
+  const achats = commandes.map(c => ({ le: c.achat, libelle: 'Achat ' + c.site + ' · ' + c.ev, detail: places(c), montant: c.rembourse ? 0 : c.prix, rembourse: c.rembourse, id: c.id }));
+  const tout = achats.concat(autresDepenses.map(d => ({ ...d, detail: 'Autre dépense' }))).sort((a, b) => b.le.localeCompare(a.le));
+  const parMois = {};
+  tout.forEach(d => { const m = d.le.slice(0, 7); parMois[m] = (parMois[m] || 0) + d.montant; });
+  const mois = Object.keys(parMois).sort().reverse();
+  const total = tout.reduce((s, d) => s + d.montant, 0);
+  return bandeau +
+    '<div class="head"><div><h1>Dépenses</h1><p class="sub">Achats de billets (importés des emails) et autres frais</p></div></div>' +
+    '<div class="kpis">' + mois.slice(0, 3).map(m => '<div class="kpi"><div class="lbl">' + new Date(m + '-15').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) + '</div><div class="val">' + eur(parMois[m]) + '</div></div>').join('') +
+      '<div class="kpi"><div class="lbl">Total</div><div class="val">' + eur(total) + '</div></div></div>' +
+    '<section class="panel" style="margin-bottom:16px"><h2>Ajouter une dépense</h2><form class="inline" id="form-depense"><label class="field">Date<input id="dep-date" type="date" value="2026-10-14" required></label><label class="field wide">Libellé<input id="dep-libelle" type="text" placeholder="Ex. frais de transfert" required></label><label class="field">Montant (€)<input id="dep-montant" type="number" min="0" step="0.01" required></label><button class="btn primary" type="submit">Ajouter</button></form></section>' +
+    '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Dépense</th><th class="r">Montant</th></tr></thead><tbody>' +
+    tout.map(d => '<tr' + (d.id ? ' class="click" data-detail="' + d.id + '"' : '') + '><td class="num">' + jour(d.le) + '</td><td class="ev">' + d.libelle + '<small>' + d.detail + (d.rembourse ? ' · remboursé' : '') + '</small></td><td class="num r">' + eur(d.montant) + '</td></tr>').join('') +
+    '</tbody></table></div>';
+}
+
+// ---------- Rendu et interactions ----------
+function rendre() {
+  const vues = { tableau: vueTableau, billets: vueBillets, ventes: vueVentes, depenses: vueDepenses, detail: vueDetail };
+  $vue.innerHTML = vues[vueCourante]();
+  const actif = vueCourante === 'detail' ? 'billets' : vueCourante;
+  document.querySelectorAll('nav button[data-vue]').forEach(b => { if (b.dataset.vue === actif) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  brancher();
+}
+function aller(vue, opts) { vueCourante = vue; if (opts && opts.filtre) filtre = opts.filtre; window.scrollTo(0, 0); rendre(); }
+
+let minuteur;
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(minuteur); minuteur = setTimeout(() => { t.hidden = true; }, 3200); }
+
+function brancher() {
+  $vue.querySelectorAll('[data-detail]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('[data-payer]')) return; detailId = el.dataset.detail; aller('detail'); }));
+  $vue.querySelectorAll('[data-aller]').forEach(el => el.addEventListener('click', () => aller(el.dataset.aller, { filtre: el.dataset.filtre })));
+  $vue.querySelectorAll('.chip[data-filtre]').forEach(el => el.addEventListener('click', () => { filtre = el.dataset.filtre; rendre(); }));
+  const r = document.getElementById('recherche');
+  if (r) r.addEventListener('input', () => { recherche = r.value; const pos = r.selectionStart; rendre(); const n = document.getElementById('recherche'); n.focus(); n.setSelectionRange(pos, pos); });
+  $vue.querySelectorAll('[data-payer]').forEach(el => el.addEventListener('click', () => {
+    const [cid, vid] = el.dataset.payer.split('|'); const v = commandes.find(c => c.id === cid).ventes.find(x => x.id === vid);
+    v.paye = !v.paye; rendre(); toast(v.paye ? 'Vente marquée comme payée.' : 'Vente marquée en attente de paiement.');
+  }));
+
+  const c = commandes.find(x => x.id === detailId);
+  const fa = document.getElementById('form-annonce');
+  if (fa) {
+    const champ = document.getElementById('prix-annonce');
+    champ.addEventListener('input', () => { const p = parseFloat(champ.value); const reste = c.qte - vendus(c); document.getElementById('marge').textContent = p > 0 ? eur(p * reste * 0.9 - coutUnitaire(c) * reste) : '—'; });
+    fa.addEventListener('submit', e => {
+      e.preventDefault(); const p = parseFloat(champ.value); if (!(p > 0)) return;
+      const nouveau = !(c.annonce && c.annonce.active); c.annonce = { prix: p, active: true }; rendre();
+      toast(nouveau ? 'Annonce publiée sur Seatiks à ' + eur(p) + ' par billet (simulation).' : 'Prix mis à jour sur Seatiks : ' + eur(p) + ' (simulation).');
+    });
+  }
+  const ret = document.getElementById('retirer');
+  if (ret) ret.addEventListener('click', () => { c.annonce.active = false; rendre(); toast('Annonce retirée de la vente (simulation).'); });
+  const rb = document.getElementById('rembourse');
+  if (rb) rb.addEventListener('click', () => { c.rembourse = !c.rembourse; if (c.rembourse && c.annonce) c.annonce.active = false; rendre(); toast(c.rembourse ? 'Commande marquée comme remboursée.' : 'Commande remise en stock.'); });
+  const vm = document.getElementById('vente-main'), fv = document.getElementById('form-vente');
+  if (vm) vm.addEventListener('click', () => { fv.hidden = !fv.hidden; if (!fv.hidden) document.getElementById('vm-montant').focus(); });
+  if (fv) fv.addEventListener('submit', e => {
+    e.preventDefault();
+    const q = parseInt(document.getElementById('vm-qte').value, 10), m = parseFloat(document.getElementById('vm-montant').value);
+    if (!(q > 0) || !(m >= 0)) return;
+    c.ventes.push({ id: 'MAIN-' + (c.ventes.length + 1), le: '2026-10-14', qte: Math.min(q, c.qte - vendus(c)), montant: m, paye: false });
+    rendre(); toast('Vente ajoutée. Bénéfice recalculé.');
+  });
+  const fd = document.getElementById('form-depense');
+  if (fd) fd.addEventListener('submit', e => {
+    e.preventDefault();
+    autresDepenses.push({ le: document.getElementById('dep-date').value, libelle: document.getElementById('dep-libelle').value.trim(), montant: parseFloat(document.getElementById('dep-montant').value) || 0 });
+    rendre(); toast('Dépense ajoutée.');
+  });
+}
+
+document.querySelectorAll('nav button[data-vue]').forEach(b => b.addEventListener('click', () => aller(b.dataset.vue, b.dataset.vue === 'billets' ? { filtre: 'tous' } : null)));
+rendre();
+</script>
