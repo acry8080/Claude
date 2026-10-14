@@ -216,7 +216,7 @@ form.f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .chart { display: block; width: 100%; height: auto; margin-top: 10px; }
 .chart text { fill: var(--muted); font: 10px var(--body); }
-.ov-mid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; }
+.ov-mid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .ov-bot { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr); gap: 12px; align-items: start; }
 .donut-wrap { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 16px; align-items: center; }
 .donut-leg { display: grid; gap: 8px; font-size: .84rem; }
@@ -541,8 +541,6 @@ function vueAccueil() {
           '<div><div class="k">Chiffre d\'affaires</div><div class="v">' + eur(m.recu) + '<small class="' + (m.recu >= mp.recu ? 'plus' : 'neg') + '">' + delta(m.recu, mp.recu).replace(/<[^>]+>/g, '') + '</small></div></div>' +
           '<div class="legend"><span><i style="background:var(--accent)"></i>Billets / jour</span><span><i style="background:var(--c-prix)"></i>Prix moyen</span><span><i style="background:var(--c-ca)"></i>Chiffre d\'affaires</span></div></div>' +
         graphique(jours) + '</div></section>' +
-      '<section class="panel"><div class="panel-h"><div><h2>Vos annonces</h2><p>Où en sont les billets pas encore vendus.</p></div><button class="linkbtn" data-aller="billets">Voir</button></div>' +
-        '<div class="panel-b donut-wrap">' + donut(parts) + '<div class="donut-leg">' + parts.map(p => '<div><i style="background:' + p[2] + '"></i><span>' + p[0] + '</span><b>' + p[1] + '</b><span class="n">' + Math.round(p[1] / totParts * 100) + ' %</span></div>').join('') + '</div></div></section>' +
     '</div>' +
 
     '<div class="ov-bot">' +
