@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Revente Billets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: tableau de bord sombre façon Seatiks — menu latéral fixe, zone de travail en panneaux à contours fins, accent vert ; menu en bas sur téléphone. Thème sombre unique, choisi exprès. */
+:root {
+  --bg: #0c100f;
+  --surface: #131917;
+  --surface-2: #1a2220;
+  --ink: #e7ecea;
+  --muted: #8a9691;
+  --line: #222b28;
+  --accent: #2fb36b;
+  --accent-soft: #12301f;
+  --on-accent: #04110a;
+  --good: #3fcf86;
+  --good-soft: #10291b;
+  --warn: #e9b24c;
+  --warn-soft: #2e240d;
+  --bad: #ff7b72;
+  --bad-soft: #351816;
+  --display: "Geist", "Helvetica Neue", Arial, sans-serif;
+  --body: "Geist", "Helvetica Neue", Arial, sans-serif;
+  --c-prix: #e9a23b;
+  --c-ca: #8b7cf6;
+  color-scheme: dark;
+}
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body.hors-ligne aside.side, body.hors-ligne nav.bottom, body.hors-ligne .mtop .live { display: none; }
+body.hors-ligne .app { grid-template-columns: minmax(0, 1fr); }
+.login { max-width: 360px; margin: 12vh auto 0; display: grid; gap: 14px; }
+.login .btn { width: 100%; }
+.orph { display: grid; gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+.orph-l { display: grid; gap: 6px; font-size: .84rem; }
+.orph-l select { width: 100%; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); border-radius: 8px; padding: 7px 9px; }
+.side-foot .linkbtn { justify-self: start; font-size: .78rem; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--body); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.n { font-variant-numeric: tabular-nums; }
+
+.app { display: grid; grid-template-columns: 224px minmax(0, 1fr); min-height: 100vh; }
+aside.side { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; border-right: 1px solid var(--line); background: var(--bg); padding: 18px 12px; display: flex; flex-direction: column; gap: 18px; }
+.logo { font: 700 .98rem var(--display); letter-spacing: -.01em; display: flex; align-items: center; gap: 9px; padding: 0 8px; }
+.logo i { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; color: var(--on-accent); font-style: normal; font-size: .74rem; font-weight: 800; }
+.tabs { display: grid; gap: 2px; }
+.tabs button { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 8px 10px; border-radius: 8px; color: var(--muted); font-weight: 500; text-align: left; }
+.tabs button svg { width: 17px; height: 17px; flex: none; }
+.tabs button:hover { color: var(--ink); background: var(--surface); }
+.tabs button[aria-current="page"] { background: var(--surface-2); color: var(--ink); }
+.side-foot { margin-top: auto; font-size: .76rem; color: var(--muted); padding: 10px 8px 0; border-top: 1px solid var(--line); display: grid; gap: 4px; }
+.live { display: inline-flex; align-items: center; gap: 6px; color: var(--good); font-weight: 600; }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+.mtop { display: none; }
+nav.bottom { display: none; }
+
+main { max-width: 1120px; width: 100%; padding-block: 22px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.demo { font-size: .78rem; color: var(--warn); background: var(--warn-soft); border-radius: 10px; padding: 8px 12px; }
+h1 { font: 800 1.6rem/1.15 var(--display); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+h2 { font: 700 1.02rem/1.2 var(--display); margin: 0; }
+.row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.sub { color: var(--muted); font-size: .88rem; margin: 0; }
+.linkbtn { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 0; }
+
+/* Carte solde */
+.hero { background: var(--surface); color: var(--ink); border-radius: 12px; padding: 16px 18px 10px; overflow: hidden; border: 1px solid var(--line); min-width: 0; }
+.hero .lbl { color: var(--muted); font-size: .86rem; }
+.hero .big { font: 700 2.2rem/1.05 var(--display); letter-spacing: -.03em; margin-top: 2px; }
+.hero .big small { font-size: 1.4rem; }
+.hero .delta { display: inline-flex; gap: 6px; align-items: center; margin-top: 4px; font-size: .86rem; color: var(--muted); }
+.hero .delta b { color: var(--good); font-weight: 600; }
+.spark { display: block; width: 100%; height: 110px; margin-top: 8px; }
+.hero-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; }
+
+.comptes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.compte { background: var(--surface); border-radius: 12px; padding: 12px 14px; min-width: 0; border: 1px solid var(--line); text-align: left; }
+.compte .ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 10px; }
+.compte .ic svg { width: 17px; height: 17px; }
+.compte .lbl { font-size: .8rem; color: var(--muted); }
+.compte .val { font: 700 1.12rem/1.2 var(--display); letter-spacing: -.01em; }
+.compte .hint { font-size: .76rem; color: var(--muted); }
+
+.alerts { display: grid; gap: 8px; }
+.alert { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line); width: 100%; text-align: left; }
+.alert .dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none; font: 700 .9rem var(--display); }
+.alert .txt { min-width: 0; flex: 1; }
+.alert .txt b { display: block; font-weight: 600; }
+.alert .chev { color: var(--muted); }
+
+.card { background: var(--surface); border-radius: 12px; padding: 4px 0; border: 1px solid var(--line); }
+.card.pad { padding: 16px; }
+.day { font-size: .78rem; font-weight: 600; color: var(--muted); padding: 10px 16px 4px; text-transform: uppercase; letter-spacing: .06em; }
+.op { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: none; text-align: left; padding: 10px 16px; }
+.op:hover { background: var(--surface-2); }
+.av { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; font: 700 .72rem var(--display); }
+.op .mid { min-width: 0; flex: 1; }
+.op .mid > span, .op .amt > span { display: block; }
+.op .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.op .s { font-size: .82rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.op .amt { text-align: right; flex: none; }
+.op .amt .a { font: 600 .95rem var(--display); font-variant-numeric: tabular-nums; }
+.op .amt .p { font-size: .76rem; }
+.plus { color: var(--good); }
+.minus { color: var(--ink); }
+.neg { color: var(--bad); }
+
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; }
+
+/* Carte billet : partie principale + talon détachable */
+.tk { --site: #6b7385; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 112px; width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-align: left; padding: 0; overflow: hidden; }
+.tk::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--site); }
+.tk:hover { border-color: var(--muted); }
+.tk-main { padding: 14px 14px 14px 20px; min-width: 0; display: grid; gap: 6px; align-content: start; }
+.tk-top { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--muted); white-space: nowrap; min-width: 0; }
+.tk-top span { overflow: hidden; text-overflow: ellipsis; }
+.tk-site { font-weight: 700; color: color-mix(in srgb, var(--site) 60%, white); }
+.tk-ev { font: 800 1.12rem/1.2 var(--display); letter-spacing: -.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tk-meta { font-size: .84rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tk-stub { position: relative; border-left: 2px dashed var(--line); background: var(--surface-2); display: grid; align-content: center; justify-items: center; gap: 2px; padding: 12px 8px; text-align: center; }
+.tk-stub::before, .tk-stub::after { content: ""; position: absolute; left: -10px; width: 18px; height: 18px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
+.tk-stub::before { top: -10px; } .tk-stub::after { bottom: -10px; }
+.tk-k { font-size: .64rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.tk-v { font: 800 1.35rem/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.tk-s { font-size: .74rem; color: var(--muted); }
+.tk-list { display: grid; gap: 10px; }
+
+/* Défilement horizontal sur l'accueil */
+.rail { display: grid; grid-auto-flow: column; grid-auto-columns: min(320px, 86%); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: thin; }
+.rail > * { scroll-snap-align: start; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: .86rem; font-weight: 600; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
+.search { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px; }
+
+.pill { display: inline-block; white-space: nowrap; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.p-list { background: var(--surface-2); color: var(--muted); }
+.p-vente { background: var(--accent-soft); color: var(--accent); }
+.p-vendu, .p-partiel { background: var(--good-soft); color: var(--good); }
+.p-annule, .p-attente { background: var(--warn-soft); color: var(--warn); }
+.p-rembourse { background: var(--bad-soft); color: var(--bad); }
+
+/* Fiche */
+.back { justify-self: start; }
+.det-head { text-align: center; padding: 8px 0 4px; }
+.det-head .av { width: 44px; height: 44px; margin: 0 auto 8px; font-size: .85rem; }
+.det-head .big { font: 800 1.9rem/1.1 var(--display); letter-spacing: -.02em; }
+.det-head .t { font-weight: 600; margin-top: 4px; text-wrap: balance; }
+.det-head .s { color: var(--muted); font-size: .88rem; }
+.list { display: grid; }
+.li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: .92rem; }
+.li:first-child { border-top: 0; }
+.li span:first-child { color: var(--muted); }
+.li span:last-child { text-align: right; overflow-wrap: anywhere; min-width: 0; }
+.sec-title { font: 700 .82rem var(--display); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 4px -8px; }
+
+.seats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.seat { background: var(--surface-2); border-radius: 12px; padding: 10px; text-align: center; }
+.seat .k { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.seat .v { font: 800 1.3rem var(--display); }
+.tag { display: inline-block; font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 4px; }
+.tag.auto { background: var(--good-soft); color: var(--good); }
+.tag.main { background: var(--accent-soft); color: var(--accent); }
+.tag.manque { background: var(--warn-soft); color: var(--warn); }
+.alerte { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 12px; font-size: .9rem; margin: 0 0 12px; }
+
+form.f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.field { display: grid; gap: 4px; font-size: .8rem; color: var(--muted); min-width: 0; }
+.field .tag { justify-self: start; }
+.field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 11px; color: var(--ink); font-size: .95rem; }
+.check { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--ink); grid-column: 1 / -1; }
+.btn { border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 700; background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.danger { color: var(--bad); }
+.btn.full { grid-column: 1 / -1; width: 100%; }
+.btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.note { font-size: .84rem; color: var(--muted); margin: 10px 0 0; }
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; font-size: .92rem; }
+.calc .total { border-top: 1px solid var(--line); padding-top: 8px; font-weight: 700; }
+.calc span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Statistiques */
+.bars { display: grid; gap: 12px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-size: .9rem; }
+.bar-row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track { grid-column: 1 / -1; height: 8px; background: var(--surface-2); border-radius: 4px; position: relative; overflow: hidden; }
+.fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); left: 50%; }
+.dash-top { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 12px; }
+.dash-top .comptes { grid-template-columns: minmax(0, 1fr); }
+.dash-top .compte { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0 12px; }
+.dash-top .compte .ic { margin: 0; grid-row: span 2; }
+.dash-top .compte .val { grid-row: span 2; grid-column: 3; text-align: right; }
+.dash-top .compte .hint { grid-column: 2; }
+.dash-bottom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 12px; align-items: start; }
+.page-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ov-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; max-width: 100%; overflow-x: auto; }
+.seg button { border: 0; background: none; color: var(--muted); font-weight: 600; font-size: .82rem; padding: 5px 10px; border-radius: 7px; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; }
+.kpi .lbl { font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--good); }
+.kpi .val { font: 700 1.5rem/1.2 var(--display); letter-spacing: -.01em; grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+.kpi .hint { font-size: .76rem; color: var(--muted); align-self: end; }
+.kpi svg { width: 80px; height: 26px; align-self: end; }
+.delta { justify-self: end; font-size: .7rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.d-up { background: var(--good-soft); color: var(--good); }
+.d-down { background: var(--bad-soft); color: var(--bad); }
+.d-flat { background: var(--surface-2); color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.panel-h { display: flex; align-items: start; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+.panel-h p { margin: 2px 0 0; color: var(--muted); font-size: .8rem; }
+.panel-b { padding: 12px 16px 14px; }
+.mini-stats { display: flex; gap: 22px; flex-wrap: wrap; align-items: end; }
+.mini-stats .k { font-size: .66rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mini-stats .v { font: 700 1.1rem var(--display); font-variant-numeric: tabular-nums; }
+.mini-stats .v small { font-size: .7rem; font-weight: 700; margin-left: 4px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .76rem; color: var(--muted); margin-left: auto; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.chart { display: block; width: 100%; height: auto; margin-top: 10px; }
+.chart text { fill: var(--muted); font: 10px var(--body); }
+.ov-mid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.ov-bot { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.donut-wrap { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 16px; align-items: center; }
+.donut-leg { display: grid; gap: 8px; font-size: .84rem; }
+.donut-leg div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.donut-leg i { width: 9px; height: 9px; border-radius: 2px; }
+.donut-leg .n { color: var(--muted); }
+.tbl-wrap { overflow-x: auto; }
+table.tbl { width: 100%; border-collapse: collapse; min-width: 600px; font-size: .82rem; }
+.tbl th:first-child, .tbl td:first-child { padding-left: 16px; }
+.tbl th:last-child, .tbl td:last-child { padding-right: 16px; }
+.tbl th { text-align: left; font-size: .66rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl tbody tr { cursor: pointer; }
+.tbl tbody tr:hover td { background: var(--surface-2); }
+.tbl td.ev { font-weight: 600; max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+.tbl .r { text-align: right; }
+.mk { display: inline-flex; align-items: center; gap: 6px; }
+.mk b { width: 16px; height: 16px; border-radius: 4px; display: inline-grid; place-items: center; font-size: .6rem; color: #fff; }
+.kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 11px 16px; border-radius: 12px; font-weight: 500; max-width: calc(100% - 32px); z-index: 30; }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: up .18s ease-out; } }
+@keyframes up { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+@media (max-width: 900px) {
+  .dash-top, .dash-bottom, .ov-mid, .ov-bot { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  aside.side { display: none; }
+  .mtop { display: flex; align-items: center; justify-content: space-between; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .mtop .logo { padding: 0; }
+  nav.bottom { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+  nav.bottom button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; font-size: .7rem; font-weight: 600; color: var(--muted); padding: 4px; }
+  nav.bottom button[aria-current="page"] { color: var(--accent); }
+  nav.bottom svg { width: 22px; height: 22px; }
+  main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .comptes { grid-template-columns: minmax(0, 1fr); }
+  .compte { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0 12px; }
+  .compte .ic { margin: 0; grid-row: span 2; }
+  .compte .val { grid-row: span 2; grid-column: 3; text-align: right; }
+  .compte .hint { grid-column: 2; }
+  .hero .big { font-size: 2.3rem; }
+  form.f { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="logo"><i>RB</i>Revente Billets</div>
+    <nav class="tabs" aria-label="Navigation">
+      <button data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 7h6V4h-6z"/></svg>Vue d'ensemble</button>
+      <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg>Billets</button>
+      <button data-vue="operations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h13l-3-3M17 17H4l3 3"/></svg>Opérations</button>
+      <button data-vue="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Statistiques</button>
+    </nav>
+    <div class="side-foot"></div>
+  </aside>
+  <div>
+    <div class="mtop"><div class="logo"><i>RB</i>Revente Billets</div><span class="live" style="font-size:.76rem">Live</span></div>
+    <main id="vue" aria-live="polite"></main>
+  </div>
+</div>
+
+<nav class="bottom" aria-label="Navigation">
+  <button data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</button>
+  <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg>Billets</button>
+  <button data-vue="operations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h13l-3-3M17 17H4l3 3"/></svg>Opérations</button>
+  <button data-vue="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats</button>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+// ---------- Données (chargées depuis le serveur) ----------
+let AUJ = new Date();
+const SITES = {
+  Viagogo: { c: '#7cb342', i: 'VG' }, StubHub: { c: '#4a2c8a', i: 'SH' }, Ticketmaster: { c: '#026cdf', i: 'TM' },
+  'Fnac Spectacles': { c: '#e1a400', i: 'FN' }, AXS: { c: '#0a7f8c', i: 'AX' }, Seatiks: { c: '#1f8f5b', i: 'ST' }, Frais: { c: '#6b7385', i: '€' },
+};
+let commandes = [], frais = [], orphelines = [], infos = {}, connecte = false, charge = false;
+const choixSeatiks = {};
+
+function depuisApi(c) {
+  const ventes = (c.ventes || []).filter(v => !v.annulee).sort((a, b) => a.le.localeCompare(b.le));
+  return {
+    id: c.id, numero: c.numero, site: c.site || 'Autre',
+    ev: c.evenement || '(événement à compléter)', lieu: c.lieu || '',
+    date: c.date_evenement || c.achete_le || ISO(new Date()), achat: c.achete_le || (c.cree_le || '').slice(0, 10),
+    bloc: c.bloc || '', rang: c.rang || '', sieges: c.sieges || '', libre: !!c.placement_libre, auto: c.auto || {},
+    qte: c.quantite || 1, prix: Number(c.prix) || 0, devise: c.devise || 'EUR',
+    prixEur: c.prix_eur != null ? Number(c.prix_eur) : Number(c.prix) || 0,
+    mail: c.email_destinataire || '', nom: c.nom || '', carte: c.paiement || '',
+    annonce: c.annonce_id || c.annonce_prix ? { prix: Number(c.annonce_prix) || 0, active: !!c.annonce_active } : null,
+    ventes: ventes.map(v => ({ id: v.id, ref: v.short_id || (v.source === 'manuel' ? 'Vente manuelle' : 'Seatiks'), le: v.le, qte: v.quantite, montant: Number(v.montant) || 0, paye: !!v.paye, livre: !!v.livre, mk: v.plateforme || (v.source === 'manuel' ? 'Manuel' : 'Seatiks'), manuel: v.source === 'manuel' })),
+    rembourse: c.rembourse ? (c.achete_le || ISO(new Date())) : null,
+    annulee: !!c.annulation_probable,
+    seatiks: { section: c.seatiks_section_nom || '' },
+  };
+}
+
+async function api(chemin, { methode = 'GET', corps } = {}) {
+  const r = await fetch(chemin, { method: methode, credentials: 'same-origin', headers: corps ? { 'Content-Type': 'application/json' } : {}, body: corps ? JSON.stringify(corps) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && chemin !== '/api/auth') { connecte = false; rendre(); throw new Error('Session expirée : reconnectez-vous.'); }
+  if (!r.ok) { const e = new Error(j.erreur || 'Erreur ' + r.status); e.statut = r.status; e.donnees = j; throw e; }
+  return j;
+}
+
+async function recharger() {
+  const d = await api('/api/donnees');
+  AUJ = new Date();
+  commandes = d.commandes.map(depuisApi);
+  frais = d.frais.map(f => ({ id: f.id, le: f.le, libelle: f.libelle, montant: Number(f.montant) || 0 }));
+  orphelines = d.orphelines || [];
+  infos = d.infos || {};
+  charge = true;
+  rendre();
+}
+
+/** Lance une action serveur, recharge les données, puis affiche le message. */
+async function action(fn, message) {
+  try {
+    const r = await fn();
+    await recharger();
+    if (message) toast(typeof message === 'function' ? message(r) : message);
+    return r;
+  } catch (e) {
+    toast(e.message);
+    throw e;
+  }
+}
+
+// ---------- Calculs ----------
+const SYMBOLES = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', CAD: 'CA$', AUD: 'A$' };
+const fmt = (n, cur) => (n < 0 ? '−' : '') + Math.abs(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (SYMBOLES[cur || 'EUR'] || cur);
+const eur = n => fmt(n);
+const sign = n => (n > 0 ? '+' : '') + eur(n);
+const coutEur = c => c.prixEur;
+const unit = c => coutEur(c) / c.qte;
+const vendus = c => c.ventes.reduce((s, v) => s + v.qte, 0);
+const profitV = (c, v) => v.montant - unit(c) * v.qte;
+const actif = c => !c.rembourse && !c.annulee && vendus(c) < c.qte;
+const manquants = c => [!c.bloc && 'le bloc', !c.libre && !c.rang && 'le rang', !c.libre && !c.sieges && 'les sièges'].filter(Boolean);
+const aCompleter = c => actif(c) && manquants(c).length > 0;
+const places = c => c.libre || !c.rang ? 'x' + c.qte + ' · ' + c.bloc : [c.bloc, 'rang ' + c.rang, c.sieges].filter(Boolean).join(' · ');
+const jourLong = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const jourCourt = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+const av = site => { const s = SITES[site] || { c: '#6b7385', i: site.slice(0, 2).toUpperCase() }; return '<span class="av" style="background:color-mix(in srgb, ' + s.c + ' 22%, transparent);color:color-mix(in srgb, ' + s.c + ' 60%, white)">' + s.i + '</span>'; };
+
+function statut(c) {
+  if (c.rembourse) return ['rembourse', 'Remboursé'];
+  if (c.annulee) return ['annule', 'Annulation probable'];
+  const v = vendus(c);
+  if (v >= c.qte) return ['vendu', 'Vendu'];
+  if (v > 0) return ['partiel', 'Vendu ' + v + '/' + c.qte];
+  if (c.annonce && c.annonce.active) return ['vente', 'En vente'];
+  return ['list', 'À lister'];
+}
+const pill = c => { const [k, t] = statut(c); return '<span class="pill p-' + k + '">' + t + '</span>'; };
+
+function operations() {
+  const ops = [];
+  commandes.forEach(c => {
+    ops.push({ type: 'achat', le: c.achat, c, montant: -coutEur(c), titre: c.ev, sous: 'Achat ' + c.site + ' · ' + c.qte + ' billet(s)', site: c.site, orig: c.devise !== 'EUR' ? fmt(-c.prix, c.devise) : '' });
+    if (c.rembourse) ops.push({ type: 'remb', le: c.rembourse, c, montant: coutEur(c), titre: c.ev, sous: 'Remboursement ' + c.site, site: c.site });
+    c.ventes.forEach(v => ops.push({ type: 'vente', le: v.le, c, v, montant: v.montant, titre: c.ev, sous: 'Vente Seatiks · ' + v.qte + ' billet(s)' + (v.paye ? '' : ' · en attente'), site: 'Seatiks', profit: profitV(c, v) }));
+  });
+  frais.forEach(f => ops.push({ type: 'frais', le: f.le, montant: -f.montant, titre: f.libelle, sous: 'Frais', site: 'Frais' }));
+  return ops.sort((a, b) => b.le.localeCompare(a.le));
+}
+
+function totaux() {
+  let profit = 0, aRecevoir = 0, nAttente = 0, stock = 0, stockN = 0, depMois = 0, recuMois = 0;
+  const mois = '2026-10';
+  commandes.forEach(c => {
+    c.ventes.forEach(v => { profit += profitV(c, v); if (!v.paye) { aRecevoir += v.montant; nAttente++; } if (v.le.startsWith(mois)) recuMois += v.montant; });
+    const r = c.qte - vendus(c);
+    if (!c.rembourse && !c.annulee && r > 0) { stock += r * unit(c); stockN += r; }
+    if (c.achat.startsWith(mois) && !c.rembourse) depMois += coutEur(c);
+  });
+  const fraisT = frais.reduce((s, f) => s + f.montant, 0);
+  frais.forEach(f => { if (f.le.startsWith(mois)) depMois += f.montant; });
+  const profitMois = commandes.reduce((s, c) => s + c.ventes.filter(v => v.le.startsWith(mois)).reduce((t, v) => t + profitV(c, v), 0), 0) - frais.filter(f => f.le.startsWith(mois)).reduce((s, f) => s + f.montant, 0);
+  return { net: profit - fraisT, profitMois, aRecevoir, nAttente, stock, stockN, depMois, recuMois };
+}
+
+// ---------- Vues ----------
+let periode = 30, modeGraph = 'combine';
+let vue = 'accueil', filtreOps = 'tout', filtreBillets = 'tous', recherche = '', detailId = null, retour = 'accueil';
+const $ = document.getElementById('vue');
+const demo = '';
+
+function ligneOp(o) {
+  const cls = o.montant > 0 ? 'plus' : 'minus';
+  return '<button class="op" ' + (o.c ? 'data-detail="' + o.c.id + '"' : 'data-frais') + '>' + av(o.site) +
+    '<span class="mid"><span class="t">' + o.titre + '</span><span class="s">' + o.sous + '</span></span>' +
+    '<span class="amt"><span class="a ' + cls + '">' + sign(o.montant) + '</span>' +
+    (o.type === 'vente' ? '<span class="p ' + (o.profit >= 0 ? 'plus' : 'neg') + '">bénéfice ' + sign(o.profit) + '</span>' : o.orig ? '<span class="p sub">' + o.orig + '</span>' : '') + '</span></button>';
+}
+function fil(ops) {
+  let html = '', cur = '';
+  ops.forEach(o => {
+    if (o.le !== cur) {
+      cur = o.le;
+      const j = Math.round((AUJ - new Date(o.le + 'T12:00:00')) / 864e5);
+      html += '<div class="day">' + (j === 0 ? "Aujourd'hui" : j === 1 ? 'Hier' : jourLong(o.le)) + '</div>';
+    }
+    html += ligneOp(o);
+  });
+  return '<div class="card">' + (html || '<p class="sub" style="padding:16px">Aucune opération.</p>') + '</div>';
+}
+
+function sparkline() {
+  const pts = commandes.flatMap(c => c.ventes.map(v => ({ le: v.le, p: profitV(c, v) }))).concat(frais.map(f => ({ le: f.le, p: -f.montant }))).sort((a, b) => a.le.localeCompare(b.le));
+  let cum = 0; const ys = [0].concat(pts.map(x => (cum += x.p)));
+  const W = 300, H = 70, min = Math.min(0, ...ys), max = Math.max(...ys), rng = max - min || 1;
+  const xy = ys.map((y, i) => [i / (ys.length - 1) * W, H - 6 - (y - min) / rng * (H - 12)]);
+  const line = xy.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const last = xy[xy.length - 1];
+  return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-label="Évolution du bénéfice cumulé">' +
+    '<polygon points="0,' + H + ' ' + line + ' ' + W + ',' + H + '" fill="var(--accent-soft)"/>' +
+    '<polyline points="' + line + '" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/>' +
+    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="3.5" fill="var(--accent)"/></svg>';
+}
+
+const ISO = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+const AUJ_ISO = ISO(AUJ);
+const nbJours = () => periode === 'tout' ? Math.max(7, Math.ceil((AUJ - new Date(commandes.reduce((m, c) => c.achat < m ? c.achat : m, AUJ_ISO) + 'T12:00:00')) / 864e5) + 1) : periode;
+const jourMoins = n => ISO(new Date(AUJ.getTime() - n * 864e5));
+function ventesEntre(debut, fin) { return commandes.flatMap(c => c.ventes.filter(v => v.le >= debut && v.le <= fin).map(v => ({ c, v }))); }
+function mesures(debut, fin) {
+  const vs = ventesEntre(debut, fin);
+  const recu = vs.reduce((t, x) => t + x.v.montant, 0), cout = vs.reduce((t, x) => t + unit(x.c) * x.v.qte, 0), billets = vs.reduce((t, x) => t + x.v.qte, 0);
+  return { recu, profit: recu - cout, roi: cout ? (recu - cout) / cout * 100 : 0, ventes: vs.length, billets, vs };
+}
+function delta(cur, prev) {
+  if (!prev) return cur ? '<span class="delta d-up">nouveau</span>' : '<span class="delta d-flat">—</span>';
+  const d = (cur - prev) / Math.abs(prev) * 100;
+  return '<span class="delta ' + (d >= 0 ? 'd-up' : 'd-down') + '">' + (d >= 0 ? '↗ +' : '↘ ') + Math.round(d) + ' %</span>';
+}
+function parJour(n) {
+  const jours = [];
+  for (let i = n - 1; i >= 0; i--) { const j = jourMoins(i); const m = mesures(j, j); jours.push({ j, billets: m.billets, recu: m.recu, profit: m.profit }); }
+  return jours;
+}
+function sparkMini(vals) {
+  const W = 80, H = 26, max = Math.max(1, ...vals), min = Math.min(0, ...vals);
+  const pts = vals.map((v, i) => (i / Math.max(1, vals.length - 1) * W).toFixed(1) + ',' + (H - 3 - (v - min) / (max - min || 1) * (H - 6)).toFixed(1)).join(' ');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><polyline points="' + pts + '" fill="none" stroke="var(--good)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>';
+}
+const arrondi = (v, pas) => Math.max(pas, Math.ceil(v / pas) * pas);
+const courtFr = j => new Date(j + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+function graphique(jours) {
+  const W = 760, H = 230, L = 30, R = 50, T = 10, B = 26, pw = W - L - R, ph = H - T - B, n = jours.length;
+  const maxB = arrondi(Math.max(...jours.map(d => d.billets)), 2);
+  const prix = jours.map(d => d.billets ? d.recu / d.billets : null);
+  const maxE = arrondi(Math.max(1, ...jours.map(d => d.recu), ...prix.filter(Boolean)), 200);
+  const x = i => L + (i + .5) * pw / n, yB = v => T + ph - v / maxB * ph, yE = v => T + ph - v / maxE * ph;
+  let g = '';
+  for (let k = 0; k <= 4; k++) {
+    const y = T + ph - k / 4 * ph;
+    g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="var(--line)"/>';
+    if (modeGraph !== 'prix' && modeGraph !== 'ca') g += '<text x="' + (L - 6) + '" y="' + (y + 3) + '" text-anchor="end">' + Math.round(maxB * k / 4) + '</text>';
+    if (modeGraph !== 'billets') g += '<text x="' + (W - R + 6) + '" y="' + (y + 3) + '">' + Math.round(maxE * k / 4) + ' €</text>';
+  }
+  const pas = Math.max(1, Math.round(n / 5));
+  jours.forEach((d, i) => { if (i % pas === 0 || i === n - 1) g += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + (d.j === AUJ_ISO ? "Auj." : courtFr(d.j)) + '</text>'; });
+  if (modeGraph === 'billets' || modeGraph === 'combine') {
+    const bw = Math.max(2, pw / n * .6);
+    jours.forEach((d, i) => { if (d.billets) g += '<rect x="' + (x(i) - bw / 2) + '" y="' + yB(d.billets) + '" width="' + bw + '" height="' + (T + ph - yB(d.billets)) + '" rx="2" fill="var(--accent)" fill-opacity=".55"/>'; });
+  }
+  if (modeGraph === 'ca' || modeGraph === 'combine') {
+    const pts = jours.map((d, i) => x(i) + ',' + yE(d.recu)).join(' ');
+    if (modeGraph === 'ca') g += '<polygon points="' + x(0) + ',' + (T + ph) + ' ' + pts + ' ' + x(n - 1) + ',' + (T + ph) + '" fill="var(--c-ca)" fill-opacity=".15"/>';
+    g += '<polyline points="' + pts + '" fill="none" stroke="var(--c-ca)" stroke-width="1.5"' + (modeGraph === 'combine' ? ' stroke-dasharray="4 3"' : '') + '/>';
+  }
+  if (modeGraph === 'prix' || modeGraph === 'combine') {
+    let seg = '', dernier = null;
+    prix.forEach((v, i) => { if (v != null) { seg += (dernier == null ? ' M' : ' L') + x(i) + ',' + yE(v); dernier = v; } });
+    g += '<path d="' + seg + '" fill="none" stroke="var(--c-prix)" stroke-width="2"/>';
+    prix.forEach((v, i) => { if (v != null) g += '<circle cx="' + x(i) + '" cy="' + yE(v) + '" r="2.5" fill="var(--c-prix)"/>'; });
+  }
+  return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Historique des ventes par jour">' + g + '</svg>';
+}
+function donut(parts) {
+  const tot = parts.reduce((t, p) => t + p[1], 0) || 1, R = 50, C = 2 * Math.PI * R;
+  let off = 0, arcs = '';
+  parts.forEach(p => { const l = p[1] / tot * C; if (p[1]) arcs += '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="' + p[2] + '" stroke-width="14" stroke-dasharray="' + Math.max(0, l - 2) + ' ' + (C - Math.max(0, l - 2)) + '" stroke-dashoffset="' + -off + '" transform="rotate(-90 65 65)"/>'; off += l; });
+  return '<svg viewBox="0 0 130 130" aria-hidden="true"><circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' + arcs +
+    '<text x="65" y="64" text-anchor="middle" fill="var(--ink)" style="font:700 20px var(--display)">' + parts.reduce((t, p) => t + p[1], 0) + '</text><text x="65" y="82" text-anchor="middle" fill="var(--muted)" style="font:11px var(--body)">billets actifs</text></svg>';
+}
+
+function vueAccueil() {
+  const n = periode === 'aujourdhui' ? 1 : nbJours();
+  const debut = jourMoins(n - 1), prevFin = jourMoins(n), prevDebut = jourMoins(2 * n - 1);
+  const m = mesures(debut, AUJ_ISO), mp = mesures(prevDebut, prevFin);
+  const jours = parJour(Math.max(7, n));
+  const serie = k => jours.slice(-Math.max(7, n)).map(d => d[k]);
+  const libelle = { aujourdhui: "aujourd'hui", 7: 'sur 7 jours', 30: 'sur 30 jours', 90: 'sur 90 jours', tout: 'depuis le début' }[periode];
+  const periodes = [['aujourdhui', "Aujourd'hui"], [7, '7 jours'], [30, '30 jours'], [90, '90 jours'], ['tout', 'Tout']];
+  const kpi = (lbl, val, hint, d, sp) => '<div class="kpi"><span class="lbl">' + lbl + '</span>' + d + '<span class="val">' + val + '</span><span class="hint">' + hint + '</span>' + sp + '</div>';
+
+  const actifs = commandes.filter(actif);
+  const parts = [['En vente', actifs.filter(c => statut(c)[0] === 'vente' || statut(c)[0] === 'partiel').length, 'var(--accent)'],
+    ['Prêts à lister', actifs.filter(c => statut(c)[0] === 'list' && !aCompleter(c)).length, 'var(--c-ca)'],
+    ['Places à compléter', actifs.filter(aCompleter).length, 'var(--warn)'],
+    ['Annulation probable', commandes.filter(c => c.annulee && !c.rembourse).length, 'var(--bad)']];
+  const totParts = parts.reduce((t, p) => t + p[1], 0) || 1;
+  const recentes = m.vs.sort((a, b) => b.v.le.localeCompare(a.v.le)).slice(0, 8);
+  const couleurMk = { HelloTickets: '#3949ab', Viagogo: '#7cb342', 'Vivid Seats': '#7b3fe4', FootballTicketNet: '#2e7d32', StubHub: '#4a2c8a', Venuor: '#283593' };
+
+  return '<div class="ov-head"><div><h1>Vue d\'ensemble</h1><p class="sub">Vos performances de revente en un coup d\'œil, ' + libelle + '.</p></div>' +
+      '<div class="seg" role="group" aria-label="Période">' + periodes.map(p => '<button data-periode="' + p[0] + '" aria-pressed="' + (String(periode) === String(p[0])) + '">' + p[1] + '</button>').join('') + '</div></div>' +
+    '<div class="kpis">' +
+      kpi('Reçu', eur(m.recu), 'net des frais Seatiks', delta(m.recu, mp.recu), sparkMini(serie('recu'))) +
+      kpi('Bénéfice', sign(m.profit), (m.recu ? Math.round(m.profit / m.recu * 100) : 0) + ' % de marge', delta(m.profit, mp.profit), sparkMini(serie('profit'))) +
+      kpi('Rentabilité', (m.roi >= 0 ? '+' : '') + Math.round(m.roi) + ' %', (m.billets ? eur(m.profit / m.billets) : '—') + ' / billet', delta(m.roi, mp.roi), sparkMini(serie('profit'))) +
+      kpi('Ventes', String(m.ventes), (m.ventes ? (m.billets / m.ventes).toFixed(1).replace('.0', '') : 0) + ' billets / vente', delta(m.ventes, mp.ventes), sparkMini(serie('billets'))) +
+    '</div>' +
+
+    '<div class="ov-mid">' +
+      '<section class="panel"><div class="panel-h"><div><h2>Historique des ventes</h2><p>Billets vendus, prix moyen et chiffre d\'affaires par jour' + (n < 7 ? ' (7 derniers jours affichés)' : '') + '.</p></div>' +
+        '<div class="seg" role="group" aria-label="Affichage">' + [['billets', 'Billets'], ['prix', 'Prix moyen'], ['ca', 'Chiffre d\'affaires'], ['combine', 'Combiné']].map(x => '<button data-mode="' + x[0] + '" aria-pressed="' + (modeGraph === x[0]) + '">' + x[1] + '</button>').join('') + '</div></div>' +
+        '<div class="panel-b"><div class="mini-stats"><div><div class="k">Billets</div><div class="v">' + m.billets + '<small class="' + (m.billets >= mp.billets ? 'plus' : 'neg') + '">' + delta(m.billets, mp.billets).replace(/<[^>]+>/g, '') + '</small></div></div>' +
+          '<div><div class="k">Prix moyen</div><div class="v">' + (m.billets ? eur(m.recu / m.billets) : '—') + '</div></div>' +
+          '<div><div class="k">Chiffre d\'affaires</div><div class="v">' + eur(m.recu) + '<small class="' + (m.recu >= mp.recu ? 'plus' : 'neg') + '">' + delta(m.recu, mp.recu).replace(/<[^>]+>/g, '') + '</small></div></div>' +
+          '<div class="legend"><span><i style="background:var(--accent)"></i>Billets / jour</span><span><i style="background:var(--c-prix)"></i>Prix moyen</span><span><i style="background:var(--c-ca)"></i>Chiffre d\'affaires</span></div></div>' +
+        graphique(jours) + '</div></section>' +
+    '</div>' +
+
+    '<div class="ov-bot">' +
+      '<section class="panel"><div class="panel-h"><div><h2>Ventes récentes</h2><p>Dernières ventes ' + libelle + '.</p></div><button class="linkbtn" data-aller="operations" data-filtre="vente">Tout voir</button></div>' +
+        (recentes.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Plateforme</th><th>Événement</th><th>Places</th><th class="r">Qté</th><th class="r">Reçu</th><th class="r">Bénéfice</th><th>Statut</th></tr></thead><tbody>' +
+          recentes.map(({ c, v }) => { const p = profitV(c, v); return '<tr data-detail="' + c.id + '"><td>' + courtFr(v.le) + '</td><td><span class="mk"><b style="background:' + (couleurMk[v.mk] || '#555') + '">' + v.mk[0] + '</b>' + v.mk + '</span></td><td class="ev">' + c.ev + '</td><td>' + c.bloc + '</td><td class="r">' + v.qte + '</td><td class="r n">' + eur(v.montant) + '</td><td class="r n ' + (p >= 0 ? 'plus' : 'neg') + '">' + sign(p) + '</td><td>' + (v.livre ? '<span class="pill p-vendu">Livré</span>' : '<span class="pill p-attente">À livrer</span>') + '</td></tr>'; }).join('') +
+          '</tbody></table></div>' : '<p class="sub" style="padding:16px">Aucune vente sur cette période.</p>') + '</section>' +
+      '<section class="panel"><div class="panel-h"><div><h2>À faire</h2><p>Ce qui attend une action de votre part.</p></div></div><div class="panel-b alerts">' +
+        [[parts[2][1], 'var(--warn-soft)', 'var(--warn)', 'Places à compléter', 'Le site n\'a pas tout trouvé dans l\'email', 'completer'],
+         [parts[1][1], 'var(--accent-soft)', 'var(--accent)', 'Prêts à mettre en vente', 'Places complètes, pas encore sur Seatiks', 'list'],
+         [commandes.flatMap(c => c.ventes).filter(v => !v.livre).length, 'var(--warn-soft)', 'var(--warn)', 'Billets à livrer', 'Vendus, pas encore envoyés à l\'acheteur', 'vendu'],
+         [parts[3][1], 'var(--bad-soft)', 'var(--bad)', 'Annulation probable', 'StubHub : « a further email »', 'annule']]
+          .filter(a => a[0]).map(a => '<button class="alert" data-aller="billets" data-fb="' + a[5] + '"><span class="dot" style="background:' + a[1] + ';color:' + a[2] + '">' + a[0] + '</span><span class="txt"><b>' + a[3] + '</b><span class="sub">' + a[4] + '</span></span><span class="chev">›</span></button>').join('') +
+        (orphelines.length ? '<div class="orph"><b>Ventes Seatiks à rattacher (' + orphelines.length + ')</b><span class="sub">Vendues depuis une annonce créée hors du site : dites à quelle commande elles correspondent.</span>' +
+          orphelines.map(v => '<div class="orph-l"><span>' + (v.evenement || 'Événement inconnu') + ' · ' + v.quantite + ' billet(s) · ' + eur(Number(v.montant) || 0) + '</span><select data-orph="' + v.id + '" aria-label="Commande correspondante"><option value="">Rattacher à…</option>' +
+            commandes.filter(actif).map(c => '<option value="' + c.id + '">' + c.ev + ' · ' + jourCourt(c.date) + ' · ' + places(c) + '</option>').join('') + '</select></div>').join('') + '</div>' : '') +
+        (!commandes.length ? '<p class="sub">Vos commandes apparaîtront ici dès que le script Gmail aura envoyé vos premiers emails d\'achat.</p>' : '') +
+      '</div></section>' +
+    '</div>';
+}
+
+function vueOperations() {
+  const f = [['tout', 'Tout'], ['achat', 'Achats'], ['vente', 'Ventes'], ['attente', 'En attente'], ['remb', 'Remboursements'], ['frais', 'Frais']];
+  const ops = operations().filter(o => (filtreOps === 'tout' || (filtreOps === 'attente' ? o.type === 'vente' && !o.v.paye : o.type === filtreOps)) &&
+    (o.titre + ' ' + o.sous).toLowerCase().includes(recherche.toLowerCase()));
+  const tot = ops.reduce((s, o) => s + o.montant, 0);
+  return demo + '<div class="row-head"><h1>Opérations</h1><span class="sub n">' + ops.length + ' opérations · ' + sign(tot) + '</span></div>' +
+    '<input class="search" id="recherche" type="search" placeholder="Rechercher" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher une opération">' +
+    '<div class="chips">' + f.map(x => '<button class="chip" data-fo="' + x[0] + '" aria-pressed="' + (filtreOps === x[0]) + '">' + x[1] + '</button>').join('') + '</div>' +
+    fil(ops) +
+    '<div class="card pad"><div class="row-head"><h2>Ajouter des frais</h2></div><form class="f" id="form-frais"><label class="field">Date<input id="fr-date" type="date" value="' + ISO(new Date()) + '" required></label><label class="field">Libellé<input id="fr-lib" placeholder="Ex. frais de transfert" required></label><label class="field">Montant (€)<input id="fr-mt" type="number" min="0" step="0.01" required></label><button class="btn full" type="submit">Ajouter</button></form>' +
+    '<p class="note">Bientôt : bouton « Importer un relevé » pour rapprocher vos achats avec les opérations de votre banque (montant réellement débité, frais de change).</p></div>';
+}
+
+function carteBillet(c) {
+  const s = SITES[c.site] || { c: '#6b7385' };
+  const reste = c.qte - vendus(c);
+  const [k] = statut(c);
+  const rond = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.round(Math.abs(n)).toLocaleString('fr-FR') + ' €';
+  const droite = k === 'rembourse' || k === 'annule'
+    ? ['Billets', '—', k === 'rembourse' ? 'remboursés' : 'à vérifier']
+    : k === 'vente'
+    ? ['En vente', rond(c.annonce.prix).replace('+', ''), 'par billet']
+    : k === 'vendu' || k === 'partiel'
+      ? ['Bénéfice', rond(c.ventes.reduce((t, v) => t + profitV(c, v), 0)), vendus(c) + '/' + c.qte + ' vendus']
+      : ['Billets', String(reste), c.qte > reste ? 'sur ' + c.qte : 'à vendre'];
+  return '<button class="tk" data-detail="' + c.id + '" style="--site:' + s.c + '"><span class="tk-main">' +
+    '<span class="tk-top"><span class="tk-site">' + c.site + '</span><span>' + jourCourt(c.date) + '</span></span>' +
+    '<span class="tk-ev">' + c.ev + '</span>' +
+    '<span class="tk-meta">' + places(c) + ' · ' + c.lieu + '</span>' +
+    '<span class="tk-tags">' + pill(c) + (aCompleter(c) ? '<span class="pill p-attente">À compléter</span>' : '') + '</span></span>' +
+    '<span class="tk-stub"><span class="tk-k">' + droite[0] + '</span><span class="tk-v ' + (droite[0] === 'Bénéfice' ? (droite[1].startsWith('−') ? 'neg' : 'plus') : '') + '">' + droite[1] + '</span><span class="tk-s">' + droite[2] + '</span></span></button>';
+}
+
+function vueBillets() {
+  const f = [['tous', 'Tous'], ['completer', 'À compléter'], ['list', 'À lister'], ['vente', 'En vente'], ['vendu', 'Vendus'], ['annule', 'Annulés']];
+  const liste = commandes.filter(c => {
+    const k = statut(c)[0];
+    const ok = filtreBillets === 'tous' || (filtreBillets === 'completer' ? aCompleter(c) : filtreBillets === 'vendu' ? (k === 'vendu' || k === 'partiel') : filtreBillets === 'annule' ? (k === 'annule' || k === 'rembourse') : k === filtreBillets);
+    return ok && (c.ev + ' ' + c.numero + ' ' + c.site).toLowerCase().includes(recherche.toLowerCase());
+  }).sort((a, b) => (actif(b) - actif(a)) || (actif(a) ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)));
+  return '<div class="row-head"><h1>Billets</h1><span class="sub">' + liste.length + ' sur ' + commandes.length + ' · tous sites</span></div>' +
+    '<div class="chips">' + f.map(x => '<button class="chip" data-fb="' + x[0] + '" aria-pressed="' + (filtreBillets === x[0]) + '">' + x[1] + '</button>').join('') + '</div>' +
+    '<input class="search" id="recherche" type="search" placeholder="Rechercher un événement, un site, un n° de commande" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher un billet">' +
+    '<div class="tk-list">' + (liste.map(carteBillet).join('') || '<p class="sub">Aucun billet ne correspond.</p>') + '</div>';
+}
+
+function vueDetail() {
+  const c = commandes.find(x => x.id === detailId);
+  const reste = c.qte - vendus(c);
+  const profit = c.ventes.reduce((s, v) => s + profitV(c, v), 0);
+  const recu = c.ventes.reduce((s, v) => s + v.montant, 0);
+  const tag = k => c.auto[k] ? '<span class="tag auto">auto</span>' : c[k] ? '<span class="tag main">ajouté par vous</span>' : k !== 'bloc' && c.libre ? '<span class="tag main">non numéroté</span>' : '<span class="tag manque">à compléter</span>';
+  const esc = v => String(v || '').replace(/"/g, '&quot;');
+  const manque = manquants(c);
+
+  let vente;
+  if (c.rembourse || c.annulee) vente = '<p class="sub">Commande ' + (c.rembourse ? 'remboursée' : 'probablement annulée') + ' : pas de mise en vente.</p>';
+  else if (reste <= 0) vente = '<p class="sub">Tous les billets sont vendus.</p>';
+  else if (aCompleter(c)) vente = '<p class="alerte">Complétez d\'abord les places au-dessus. Le site ne publie rien d\'incomplet sur Seatiks.</p>';
+  else if (!infos.seatiks) vente = '<p class="alerte">Seatiks n\'est pas branché : ajoutez SEATIKS_API_KEY dans les variables Vercel.</p>';
+  else vente = (c.annonce && c.annonce.active ? '<p style="margin:0 0 10px">En vente à <b class="n">' + eur(c.annonce.prix) + '</b> par billet · ' + reste + ' billet(s) · toutes les plateformes</p>' : '<p class="sub" style="margin:0 0 10px">Pas encore en vente · ' + reste + ' billet(s) disponible(s)</p>') +
+    (choixSeatiks[c.id] ? '<p class="alerte">' + choixSeatiks[c.id].raison + ' Choisissez ' + (choixSeatiks[c.id].type === 'evenement' ? 'l\'événement' : 'la section') + ' sur Seatiks, puis validez.</p>' : '') +
+    '<form class="f" id="form-annonce">' +
+    (choixSeatiks[c.id] ? '<label class="field" style="grid-column:1/-1">' + (choixSeatiks[c.id].type === 'evenement' ? 'Événement Seatiks' : 'Section Seatiks') + '<select id="choix-seatiks" required><option value="">Choisir…</option>' +
+      choixSeatiks[c.id].options.map(o => o.key ? '<option value="' + esc(o.key) + '">' + o.nom + '</option>' : '<option value="' + esc(o.id) + '">' + o.nom + ' · ' + (o.date ? new Date(o.date).toLocaleDateString('fr-FR') : '') + (o.lieu ? ' · ' + o.lieu : '') + '</option>').join('') + '</select></label>' : '') +
+    '<label class="field" style="grid-column:1/-1">Prix par billet (€)<input id="prix" type="number" min="1" step="0.01" inputmode="decimal" value="' + (c.annonce ? c.annonce.prix : '') + '" required></label>' +
+    '<button class="btn primary full" type="submit">' + (c.annonce && c.annonce.active ? 'Changer le prix' : 'Mettre en vente sur Seatiks') + '</button>' +
+    (c.annonce && c.annonce.active ? '<button class="btn danger full" type="button" id="retirer">Retirer de la vente</button>' : '') + '</form>' +
+    '<p class="note">Sera publié : ' + (c.seatiks.section || 'section trouvée automatiquement') + (c.libre ? ' · placement libre' : ' · rang ' + c.rang + ' · sièges ' + c.sieges) + ' · ' + reste + ' billet(s) · E-ticket · tous ensemble · n° ' + c.site + ' en note interne.<br>Bénéfice si tout se vend à ce prix : <b class="n" id="marge">' + (c.annonce ? sign(c.annonce.prix * reste * 0.9 - unit(c) * reste) : '—') + '</b> (environ 10 % de frais Seatiks, à confirmer).</p>';
+
+  return '<button class="linkbtn back" data-aller="' + retour + '">‹ Retour</button>' +
+    '<div class="det-head">' + av(c.site) + '<div class="big n">' + (profit ? sign(profit) : eur(-coutEur(c))) + '</div><div class="t">' + c.ev + '</div><div class="s">' + (profit ? 'Bénéfice sur ' + vendus(c) + ' billet(s) vendu(s)' : 'Acheté sur ' + c.site + ' le ' + jourCourt(c.achat)) + '</div><div style="margin-top:8px">' + pill(c) + '</div></div>' +
+
+    '<div class="sec-title">Places</div><div class="card pad">' +
+      (actif(c) && manque.length ? '<p class="alerte">Le site n\'a pas trouvé ' + manque.join(', ').replace(/, ([^,]*)$/, ' et $1') + ' dans l\'email ' + c.site + '. Complétez-les ici, ou cochez « Placement libre » pour une fosse ou une pelouse.</p>' : '') +
+      '<div class="seats"><div class="seat"><div class="k">Bloc</div><div class="v">' + (c.bloc || '—') + '</div></div><div class="seat"><div class="k">Rang</div><div class="v">' + (c.rang || '—') + '</div></div><div class="seat"><div class="k">Sièges</div><div class="v">' + (c.sieges || '—') + '</div></div></div>' +
+      '<form class="f" id="form-places" style="margin-top:12px">' +
+        '<label class="field">Bloc ' + tag('bloc') + '<input id="pl-bloc" value="' + esc(c.bloc) + '" required></label>' +
+        '<label class="field">Rang ' + tag('rang') + '<input id="pl-rang" value="' + esc(c.rang) + '" placeholder="ex. 13"' + (c.libre ? ' disabled' : '') + '></label>' +
+        '<label class="field">Sièges ' + tag('sieges') + '<input id="pl-sieges" value="' + esc(c.sieges) + '" placeholder="ex. 35-36"' + (c.libre ? ' disabled' : '') + '></label>' +
+        '<label class="check"><input type="checkbox" id="pl-libre"' + (c.libre ? ' checked' : '') + '> Placement libre (fosse, pelouse, places non numérotées)</label>' +
+        '<p class="note" style="grid-column:1/-1;margin:0">' + (c.seatiks.section ? 'Section sur Seatiks : <b>' + c.seatiks.section + '</b>' : 'La section Seatiks sera trouvée à la mise en vente.') + '</p>' +
+        '<button class="btn full" type="submit">Enregistrer les places</button></form></div>' +
+
+    '<div class="sec-title">Mise en vente Seatiks</div><div class="card pad">' + vente + '</div>' +
+
+    '<div class="sec-title">Bénéfice</div><div class="card pad"><div class="calc"><span>Reçu pour ' + vendus(c) + ' billet(s)</span><span>' + eur(recu) + '</span><span>Coût de ces billets</span><span>' + eur(-unit(c) * vendus(c)) + '</span><span class="total">Bénéfice</span><span class="total ' + (profit >= 0 ? 'plus' : 'neg') + '">' + sign(profit) + '</span></div>' +
+      (c.ventes.length ? '<div class="list" style="margin:12px -16px -16px">' + c.ventes.map(v => '<div class="li"><span>' + v.ref + ' · ' + jourCourt(v.le) + ' · ' + v.qte + ' billet(s)</span><span>' + eur(v.montant) + ' <button class="pill ' + (v.paye ? 'p-vendu' : 'p-attente') + '" style="border:0" data-payer="' + v.id + '">' + (v.paye ? 'Payé' : 'En attente') + '</button></span></div>').join('') + '</div>' : '') + '</div>' +
+
+    '<div class="sec-title">Commande</div><div class="card"><div class="list">' +
+      '<div class="li"><span>Site</span><span>' + c.site + '</span></div><div class="li"><span>N° de commande</span><span class="n">' + c.numero + '</span></div>' +
+      '<div class="li"><span>Événement</span><span>' + jourCourt(c.date) + ' · ' + c.lieu + '</span></div>' +
+      '<div class="li"><span>Prix d\'achat</span><span class="n">' + fmt(c.prix, c.devise) + (c.devise !== 'EUR' ? ' ≈ ' + eur(coutEur(c)) : '') + '</span></div>' +
+      '<div class="li"><span>Adresse email</span><span>' + c.mail + '</span></div><div class="li"><span>Nom</span><span>' + c.nom + '</span></div>' +
+      '<div class="li"><span>Paiement</span><span>' + (/^\d{4}$/.test(c.carte) ? 'Carte •••• ' + c.carte : c.carte) + '</span></div></div></div>' +
+    '<div class="btns"><button class="btn" id="rembourse">' + (c.rembourse ? 'Annuler « remboursé »' : 'Marquer remboursé') + '</button>' + (reste > 0 && !c.rembourse ? '<button class="btn" id="vente-main">Vente à la main</button>' : '') + '<button class="btn danger" id="supprimer">Supprimer la commande</button></div>' +
+    '<form class="f" id="form-vente" hidden><label class="field">Billets<input id="vm-q" type="number" min="1" max="' + reste + '" value="' + reste + '" required></label><label class="field">Montant reçu (€)<input id="vm-m" type="number" min="0" step="0.01" required></label><button class="btn primary" type="submit">Enregistrer</button></form>';
+}
+
+function vueStats() {
+  const parEv = {}, parSite = {};
+  commandes.forEach(c => c.ventes.forEach(v => { const p = profitV(c, v); parEv[c.ev] = (parEv[c.ev] || 0) + p; parSite[c.site] = (parSite[c.site] || 0) + p; }));
+  const bars = obj => {
+    const l = Object.entries(obj).sort((a, b) => b[1] - a[1]), max = Math.max(1, ...l.map(x => Math.abs(x[1]))), neg = l.some(x => x[1] < 0), z = neg ? 50 : 0, sc = neg ? 50 : 100;
+    return '<div class="bars">' + l.map(([n, p]) => { const w = Math.abs(p) / max * sc; return '<div class="bar-row"><span class="name">' + n + '</span><span class="n ' + (p >= 0 ? 'plus' : 'neg') + '">' + sign(p) + '</span><div class="track"><div class="fill" style="left:' + (p >= 0 ? z : z - w) + '%;width:' + w + '%;background:var(' + (p >= 0 ? '--good' : '--bad') + ')"></div>' + (neg ? '<div class="zero"></div>' : '') + '</div></div>'; }).join('') + '</div>';
+  };
+  const ventes = commandes.flatMap(c => c.ventes.map(v => ({ c, v })));
+  const recu = ventes.reduce((s, x) => s + x.v.montant, 0), cout = ventes.reduce((s, x) => s + unit(x.c) * x.v.qte, 0);
+  return demo + '<h1>Statistiques</h1>' +
+    '<div class="kv"><div class="compte"><div class="lbl">Marge moyenne</div><div class="val n">' + (cout ? Math.round((recu - cout) / cout * 100) : 0) + ' %</div><div class="hint">sur ' + ventes.length + ' ventes</div></div>' +
+    '<div class="compte"><div class="lbl">Chiffre d\'affaires</div><div class="val n">' + eur(recu) + '</div><div class="hint">' + eur(cout) + ' de coût d\'achat</div></div></div>' +
+    '<div class="card pad"><div class="row-head"><h2>Bénéfice par événement</h2></div>' + bars(parEv) + '</div>' +
+    '<div class="card pad"><div class="row-head"><h2>Bénéfice par site d\'achat</h2></div>' + bars(parSite) + '</div>';
+}
+
+// ---------- Rendu et interactions ----------
+function rendre() {
+  document.body.classList.toggle('hors-ligne', !connecte);
+  if (!connecte) { $.innerHTML = vueConnexion(); brancherConnexion(); return; }
+  if (!charge) return;
+  $.innerHTML = ({ accueil: vueAccueil, billets: vueBillets, operations: vueOperations, stats: vueStats, detail: vueDetail })[vue]();
+  const act = vue === 'detail' ? retour : vue;
+  document.querySelectorAll('[data-vue]').forEach(b => b.dataset.vue === act ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
+  brancher();
+  piedMenu();
+}
+function aller(v, o) { if (v !== 'detail') recherche = ''; vue = v; if (o) Object.assign(window, o); window.scrollTo(0, 0); rendre(); }
+let tm; function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.hidden = false; clearTimeout(tm); tm = setTimeout(() => { t.hidden = true; }, 3200); }
+
+function brancher() {
+  $.querySelectorAll('[data-detail]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('[data-payer]')) return; retour = vue === 'detail' ? retour : vue; detailId = el.dataset.detail; aller('detail'); }));
+  $.querySelectorAll('[data-aller]').forEach(el => el.addEventListener('click', () => {
+    if (el.dataset.filtre) filtreOps = el.dataset.filtre; else if (el.dataset.aller === 'operations') filtreOps = 'tout';
+    if (el.dataset.fb) filtreBillets = el.dataset.fb; else if (el.dataset.aller === 'billets') filtreBillets = 'tous';
+    aller(el.dataset.aller);
+  }));
+  $.querySelectorAll('[data-fo]').forEach(el => el.addEventListener('click', () => { filtreOps = el.dataset.fo; rendre(); }));
+  $.querySelectorAll('.chip[data-fb]').forEach(el => el.addEventListener('click', () => { filtreBillets = el.dataset.fb; rendre(); }));
+  const r = document.getElementById('recherche');
+  if (r) r.addEventListener('input', () => { recherche = r.value; const p = r.selectionStart; rendre(); const n = document.getElementById('recherche'); n.focus(); n.setSelectionRange(p, p); });
+  $.querySelectorAll('[data-periode]').forEach(el => el.addEventListener('click', () => { const v = el.dataset.periode; periode = isNaN(v) ? v : Number(v); rendre(); }));
+  $.querySelectorAll('[data-mode]').forEach(el => el.addEventListener('click', () => { modeGraph = el.dataset.mode; rendre(); }));
+  $.querySelectorAll('[data-orph]').forEach(el => el.addEventListener('change', () => {
+    if (el.value) action(() => api('/api/ventes', { methode: 'POST', corps: { action: 'rattacher', id: el.dataset.orph, commande_id: el.value } }), 'Vente rattachée.');
+  }));
+  const ff = document.getElementById('form-frais');
+  if (ff) ff.addEventListener('submit', e => {
+    e.preventDefault();
+    action(() => api('/api/frais', { methode: 'POST', corps: { le: document.getElementById('fr-date').value, libelle: document.getElementById('fr-lib').value.trim(), montant: parseFloat(document.getElementById('fr-mt').value) || 0 } }), 'Frais ajoutés.');
+  });
+
+  const c = commandes.find(x => x.id === detailId);
+  if (vue !== 'detail' || !c) return;
+  const patch = (champs, message) => action(() => api('/api/commandes', { methode: 'PATCH', corps: { id: c.id, ...champs } }), message);
+  $.querySelectorAll('[data-payer]').forEach(el => el.addEventListener('click', () => {
+    const v = c.ventes.find(x => x.id === el.dataset.payer);
+    action(() => api('/api/ventes', { methode: 'POST', corps: { action: 'payer', id: v.id, paye: !v.paye } }), v.paye ? 'Vente remise en attente.' : 'Vente marquée payée.');
+  }));
+  const fp = document.getElementById('form-places'), libre = document.getElementById('pl-libre');
+  if (libre) libre.addEventListener('change', () => ['pl-rang', 'pl-sieges'].forEach(id => { document.getElementById(id).disabled = libre.checked; }));
+  if (fp) fp.addEventListener('submit', e => {
+    e.preventDefault();
+    patch({ bloc: document.getElementById('pl-bloc').value.trim(), rang: document.getElementById('pl-rang').value.trim(), sieges: document.getElementById('pl-sieges').value.trim(), placement_libre: libre.checked },
+      c.annonce && c.annonce.active ? 'Places enregistrées. L\'annonce déjà en ligne garde ses anciennes places : modifiez-la sur Seatiks si besoin.' : 'Places enregistrées.');
+  });
+  const fa = document.getElementById('form-annonce');
+  if (fa) {
+    const px = document.getElementById('prix'), reste = c.qte - vendus(c);
+    px.addEventListener('input', () => { const p = parseFloat(px.value); document.getElementById('marge').textContent = p > 0 ? sign(p * reste * 0.9 - unit(c) * reste) : '—'; });
+    fa.addEventListener('submit', async e => {
+      e.preventDefault();
+      const p = parseFloat(px.value);
+      if (!(p > 0)) return;
+      const corps = { id: c.id, prix: p };
+      const ch = choixSeatiks[c.id], sel = document.getElementById('choix-seatiks');
+      if (ch && sel) corps[ch.type === 'evenement' ? 'event_id' : 'section_key'] = sel.value;
+      const bouton = fa.querySelector('button[type=submit]');
+      bouton.disabled = true; bouton.textContent = 'Envoi à Seatiks…';
+      try {
+        await action(() => api('/api/annonce', { methode: 'POST', corps }), r => r.message);
+        delete choixSeatiks[c.id];
+        rendre();
+      } catch (err) {
+        if (err.statut === 409 && err.donnees && err.donnees.choix) { choixSeatiks[c.id] = err.donnees.choix; rendre(); }
+        else { bouton.disabled = false; bouton.textContent = 'Réessayer'; }
+      }
+    });
+  }
+  const ret = document.getElementById('retirer');
+  if (ret) ret.addEventListener('click', () => action(() => api('/api/annonce', { methode: 'POST', corps: { id: c.id, prix: null } }), r => r.message));
+  const rb = document.getElementById('rembourse');
+  if (rb) rb.addEventListener('click', () => patch({ rembourse: !c.rembourse }, c.rembourse ? 'Commande remise en stock.' : 'Commande marquée remboursée.'));
+  const vm = document.getElementById('vente-main'), fv = document.getElementById('form-vente');
+  if (vm) vm.addEventListener('click', () => { fv.hidden = !fv.hidden; if (!fv.hidden) document.getElementById('vm-m').focus(); });
+  if (fv) fv.addEventListener('submit', e => {
+    e.preventDefault();
+    const q = parseInt(document.getElementById('vm-q').value, 10), m = parseFloat(document.getElementById('vm-m').value);
+    if (!(q > 0) || !(m >= 0)) return;
+    action(() => api('/api/ventes', { methode: 'POST', corps: { action: 'manuelle', commande_id: c.id, quantite: Math.min(q, c.qte - vendus(c)), montant: m } }), 'Vente ajoutée, bénéfice recalculé.');
+  });
+  const sup = document.getElementById('supprimer');
+  if (sup) sup.addEventListener('click', () => {
+    if (sup.dataset.confirme) return action(() => api('/api/commandes?id=' + encodeURIComponent(c.id), { methode: 'DELETE' }), 'Commande supprimée.').then(() => aller('billets'));
+    sup.dataset.confirme = '1'; sup.textContent = 'Cliquez encore pour confirmer';
+  });
+}
+
+// ---------- Connexion ----------
+function vueConnexion() {
+  return '<form class="login" id="form-connexion"><h1>Revente Billets</h1><p class="sub">Entrez votre mot de passe.</p>' +
+    '<label class="field">Mot de passe<input id="mdp" type="password" autocomplete="current-password" required></label>' +
+    '<button class="btn primary" type="submit">Se connecter</button><p class="sub" id="err-connexion"></p></form>';
+}
+function brancherConnexion() {
+  const f = document.getElementById('form-connexion');
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      await api('/api/auth', { methode: 'POST', corps: { action: 'connexion', mot_de_passe: document.getElementById('mdp').value } });
+      connecte = true;
+      await recharger();
+    } catch (err) {
+      document.getElementById('err-connexion').textContent = err.message;
+    }
+  });
+  document.getElementById('mdp').focus();
+}
+
+const ilYa = iso => {
+  if (!iso) return 'jamais';
+  const m = Math.round((Date.now() - new Date(iso)) / 6e4);
+  return m < 1 ? "à l'instant" : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : new Date(iso).toLocaleDateString('fr-FR');
+};
+function piedMenu() {
+  const sf = document.querySelector('.side-foot');
+  if (!sf) return;
+  sf.innerHTML = '<span class="live"' + (infos.seatiks ? '' : ' style="color:var(--warn)"') + '>' + (infos.seatiks ? 'Seatiks · Live' : 'Seatiks non branché') + '</span>' +
+    '<span>Emails lus ' + ilYa(infos.dernier_email) + '</span><span>Ventes Seatiks ' + ilYa(infos.derniere_sync) + '</span>' +
+    (infos.seatiks ? '<button class="linkbtn" id="actualiser">Actualiser les ventes</button>' : '') + '<button class="linkbtn" id="deconnexion">Se déconnecter</button>';
+  const a = document.getElementById('actualiser');
+  if (a) a.onclick = () => action(() => api('/api/sync', { methode: 'POST' }), r => r.ajoutees ? r.ajoutees + ' nouvelle(s) vente(s) Seatiks.' : 'Ventes Seatiks à jour.');
+  document.getElementById('deconnexion').onclick = async () => { await api('/api/auth', { methode: 'POST', corps: { action: 'deconnexion' } }); connecte = false; rendre(); };
+}
+
+async function demarrer() {
+  $.innerHTML = '<p class="sub">Chargement…</p>';
+  try {
+    const s = await api('/api/auth');
+    connecte = s.connecte;
+    if (connecte) await recharger(); else rendre();
+  } catch (e) {
+    $.innerHTML = '<p class="alerte">' + e.message + '</p>';
+  }
+}
+
+document.querySelectorAll('[data-vue]').forEach(b => b.addEventListener('click', () => { if (b.dataset.vue === 'operations') filtreOps = 'tout'; if (b.dataset.vue === 'billets') filtreBillets = 'tous'; aller(b.dataset.vue); }));
+demarrer();
+</script>
+
+</body>
+</html>

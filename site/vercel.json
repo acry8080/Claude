@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/emails.js": { "maxDuration": 60 },
+    "api/sync.js": { "maxDuration": 60 },
+    "api/annonce.js": { "maxDuration": 30 }
+  }
+}
