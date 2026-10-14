@@ -1,224 +1,240 @@
 <title>Revente Billets</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
 <style>
-/* Layout: application à deux zones — navigation (colonne à gauche, barre en bas sur téléphone) et vue courante ; typo d'affichage façon panneau de stade */
+/* Layout: appli bancaire — une colonne centrée (760px), carte « solde » en tête, puis comptes et fil d'opérations ; onglets en haut sur ordinateur, en bas sur téléphone */
 :root {
-  --bg: #f3f5f8;
+  --bg: #f2f4f7;
   --surface: #ffffff;
-  --surface-2: #eaeef4;
-  --ink: #17202e;
-  --muted: #5d6879;
-  --line: #d8dee8;
-  --accent: #2446c7;
-  --accent-soft: #e3e9fb;
+  --surface-2: #eef1f5;
+  --ink: #111827;
+  --muted: #6b7385;
+  --line: #e2e6ec;
+  --hero: #0f1b3d;
+  --hero-ink: #f5f7ff;
+  --hero-muted: #a9b4d6;
+  --accent: #3d5afe;
+  --accent-soft: #e6eaff;
   --on-accent: #ffffff;
-  --good: #19794a;
-  --good-soft: #dff2e7;
-  --warn: #9a6200;
-  --warn-soft: #fbefd6;
-  --bad: #b3261e;
-  --bad-soft: #fbe2df;
-  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
-  --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --good: #128a52;
+  --good-soft: #def4e8;
+  --warn: #a15c00;
+  --warn-soft: #fdf0d9;
+  --bad: #c62828;
+  --bad-soft: #fde4e2;
+  --display: "Manrope", "Helvetica Neue", Arial, sans-serif;
+  --body: "DM Sans", "Helvetica Neue", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f141c; --surface: #171e29; --surface-2: #1f2835; --ink: #e8edf5; --muted: #98a3b5; --line: #2a3443;
-  --accent: #7d98ff; --accent-soft: #1f2a4d; --on-accent: #0b1020;
-  --good: #5fd39a; --good-soft: #143426; --warn: #f2bf5e; --warn-soft: #3a2c10; --bad: #ff8a80; --bad-soft: #3d1a18;
+  --bg: #0b0f17; --surface: #141a25; --surface-2: #1b2331; --ink: #eef1f7; --muted: #95a0b4; --line: #252e3e;
+  --hero: #1a2a63; --hero-ink: #f5f7ff; --hero-muted: #b6c0e4;
+  --accent: #8a9cff; --accent-soft: #1e2650; --on-accent: #0b1020;
+  --good: #4fd394; --good-soft: #12301f; --warn: #f3bd5d; --warn-soft: #36290f; --bad: #ff8a80; --bad-soft: #3b1918;
   color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #0f141c; --surface: #171e29; --surface-2: #1f2835; --ink: #e8edf5; --muted: #98a3b5; --line: #2a3443;
-  --accent: #7d98ff; --accent-soft: #1f2a4d; --on-accent: #0b1020;
-  --good: #5fd39a; --good-soft: #143426; --warn: #f2bf5e; --warn-soft: #3a2c10; --bad: #ff8a80; --bad-soft: #3d1a18;
+  --bg: #0b0f17; --surface: #141a25; --surface-2: #1b2331; --ink: #eef1f7; --muted: #95a0b4; --line: #252e3e;
+  --hero: #1a2a63; --hero-ink: #f5f7ff; --hero-muted: #b6c0e4;
+  --accent: #8a9cff; --accent-soft: #1e2650; --on-accent: #0b1020;
+  --good: #4fd394; --good-soft: #12301f; --warn: #f3bd5d; --warn-soft: #36290f; --bad: #ff8a80; --bad-soft: #3b1918;
   color-scheme: dark; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.n { font-variant-numeric: tabular-nums; }
 
-.app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100%; background: linear-gradient(to right, var(--surface) 219px, var(--line) 219px, var(--line) 220px, transparent 220px); }
-nav.side { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; }
-.brand { font: 700 1.5rem/1 var(--display); letter-spacing: .02em; text-transform: uppercase; padding: 4px 10px 18px; }
-.brand small { display: block; font: 500 .72rem var(--body); letter-spacing: .08em; color: var(--muted); margin-top: 6px; }
-nav.side button { display: flex; align-items: center; gap: 10px; text-align: left; border: 0; background: none; padding: 9px 10px; border-radius: 8px; color: var(--muted); font-weight: 500; }
-nav.side button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
-nav.side button:hover { color: var(--ink); }
-nav.side svg, nav.bottom svg { width: 18px; height: 18px; flex: none; }
-.side-foot { margin-top: auto; font-size: .78rem; color: var(--muted); padding: 10px; border-top: 1px solid var(--line); }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 16px; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.logo { font: 800 1.05rem var(--display); letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+.logo i { width: 26px; height: 26px; border-radius: 8px; background: var(--hero); display: grid; place-items: center; color: var(--hero-ink); font-style: normal; font-size: .8rem; }
+.tabs { display: flex; gap: 4px; margin-left: auto; }
+.tabs button { border: 0; background: none; padding: 7px 12px; border-radius: 999px; color: var(--muted); font-weight: 600; }
+.tabs button[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
 nav.bottom { display: none; }
 
-main { min-width: 0; padding-block: 24px 48px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); max-width: 1180px; width: 100%; }
-.demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-size: .86rem; margin-bottom: 20px; }
-.demo strong { font-weight: 600; }
-.head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-h1 { font: 700 2.1rem/1.05 var(--display); text-transform: uppercase; letter-spacing: .01em; margin: 0; text-wrap: balance; }
-h2 { font: 600 1.15rem/1.2 var(--display); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 12px; }
-.sub { color: var(--muted); margin: 4px 0 0; }
+main { max-width: 760px; margin: 0 auto; padding-block: 20px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.demo { font-size: .82rem; color: var(--warn); background: var(--warn-soft); border-radius: 10px; padding: 8px 12px; }
+h1 { font: 800 1.6rem/1.15 var(--display); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+h2 { font: 700 1.02rem/1.2 var(--display); margin: 0; }
+.row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.sub { color: var(--muted); font-size: .88rem; margin: 0; }
+.linkbtn { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 0; }
 
-.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
-.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
-.kpi .lbl { font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
-.kpi .val { font: 600 2rem/1.1 var(--display); margin-top: 4px; font-variant-numeric: tabular-nums; }
-.kpi .hint { font-size: .82rem; color: var(--muted); }
-.pos { color: var(--good); } .neg { color: var(--bad); }
+/* Carte solde */
+.hero { background: var(--hero); color: var(--hero-ink); border-radius: 20px; padding: 20px 22px 14px; overflow: hidden; }
+.hero .lbl { color: var(--hero-muted); font-size: .86rem; }
+.hero .big { font: 800 2.7rem/1.05 var(--display); letter-spacing: -.03em; margin-top: 2px; }
+.hero .big small { font-size: 1.4rem; }
+.hero .delta { display: inline-flex; gap: 6px; align-items: center; margin-top: 6px; font-size: .86rem; color: var(--hero-muted); }
+.hero .delta b { color: var(--hero-ink); font-weight: 600; }
+.spark { display: block; width: 100%; height: 70px; margin-top: 10px; }
+.hero-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: var(--hero-muted); border-top: 1px solid rgb(255 255 255 / .12); padding-top: 10px; margin-top: 4px; }
 
-.grid2 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.comptes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.compte { background: var(--surface); border-radius: 16px; padding: 14px; min-width: 0; border: 0; text-align: left; }
+.compte .ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 10px; }
+.compte .ic svg { width: 17px; height: 17px; }
+.compte .lbl { font-size: .8rem; color: var(--muted); }
+.compte .val { font: 700 1.25rem/1.2 var(--display); letter-spacing: -.01em; }
+.compte .hint { font-size: .76rem; color: var(--muted); }
 
-.bars { display: grid; gap: 10px; }
-.bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 10px; align-items: center; font-size: .88rem; }
-.bar-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar-track { grid-column: 1 / -1; height: 8px; background: var(--surface-2); border-radius: 4px; position: relative; overflow: hidden; }
-.bar-fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
-.bar-zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--muted); }
-.bar-row .num { text-align: right; }
+.alerts { display: grid; gap: 8px; }
+.alert { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 14px; padding: 12px 14px; border: 0; width: 100%; text-align: left; }
+.alert .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; font: 700 .9rem var(--display); }
+.alert .txt { min-width: 0; flex: 1; }
+.alert .txt b { display: block; font-weight: 600; }
+.alert .chev { color: var(--muted); }
 
-.todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.todo li { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); }
-.todo li > span:first-child { min-width: 0; }
-.todo b { font-weight: 600; }
-.count { font: 600 1.2rem var(--display); min-width: 2ch; text-align: right; }
+.card { background: var(--surface); border-radius: 16px; padding: 6px 0; }
+.card.pad { padding: 16px; }
+.day { font-size: .78rem; font-weight: 600; color: var(--muted); padding: 10px 16px 4px; text-transform: uppercase; letter-spacing: .06em; }
+.op { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: none; text-align: left; padding: 10px 16px; }
+.op:hover { background: var(--surface-2); }
+.av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; font: 700 .8rem var(--display); color: #fff; }
+.op .mid { min-width: 0; flex: 1; }
+.op .mid > span, .op .amt > span { display: block; }
+.op .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.op .s { font-size: .82rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.op .amt { text-align: right; flex: none; }
+.op .amt .a { font: 700 .98rem var(--display); font-variant-numeric: tabular-nums; }
+.op .amt .p { font-size: .76rem; }
+.plus { color: var(--good); }
+.minus { color: var(--ink); }
+.neg { color: var(--bad); }
 
-.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .86rem; color: var(--muted); }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-.search { margin-left: auto; min-width: 0; flex: 0 1 240px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 0; background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: .86rem; font-weight: 600; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.search { width: 100%; border: 0; background: var(--surface); border-radius: 12px; padding: 10px 14px; }
 
-.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-table { width: 100%; border-collapse: collapse; min-width: 760px; }
-th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-th { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; background: var(--surface-2); }
-tbody tr:last-child td { border-bottom: 0; }
-tbody tr.click { cursor: pointer; }
-tbody tr.click:hover td { background: var(--surface-2); }
-td.r, th.r { text-align: right; }
-.ev { font-weight: 600; }
-.ev small { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; }
-tfoot td { font-weight: 600; background: var(--surface-2); }
-
-.pill { display: inline-block; white-space: nowrap; font-size: .76rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+.pill { display: inline-block; white-space: nowrap; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
 .p-list { background: var(--surface-2); color: var(--muted); }
 .p-vente { background: var(--accent-soft); color: var(--accent); }
-.p-vendu { background: var(--good-soft); color: var(--good); }
-.p-partiel { background: var(--good-soft); color: var(--good); }
-.p-annule { background: var(--warn-soft); color: var(--warn); }
+.p-vendu, .p-partiel { background: var(--good-soft); color: var(--good); }
+.p-annule, .p-attente { background: var(--warn-soft); color: var(--warn); }
 .p-rembourse { background: var(--bad-soft); color: var(--bad); }
-.p-attente { background: var(--warn-soft); color: var(--warn); }
 
-.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px; font-weight: 600; }
-.btn:hover { border-color: var(--muted); }
-.btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
-.btn.danger { color: var(--bad); }
-.btn.small { padding: 4px 10px; font-size: .84rem; }
-.link { border: 0; background: none; color: var(--accent); padding: 0; font-weight: 600; }
+/* Fiche */
+.back { justify-self: start; }
+.det-head { text-align: center; padding: 8px 0 4px; }
+.det-head .av { width: 56px; height: 56px; margin: 0 auto 10px; font-size: 1rem; }
+.det-head .big { font: 800 2.2rem/1.1 var(--display); letter-spacing: -.02em; }
+.det-head .t { font-weight: 600; margin-top: 4px; text-wrap: balance; }
+.det-head .s { color: var(--muted); font-size: .88rem; }
+.list { display: grid; }
+.li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: .92rem; }
+.li:first-child { border-top: 0; }
+.li span:first-child { color: var(--muted); }
+.li span:last-child { text-align: right; overflow-wrap: anywhere; min-width: 0; }
+.sec-title { font: 700 .82rem var(--display); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 4px -8px; }
 
-/* Détail : le billet, avec son talon perforé */
-.ticket { display: grid; grid-template-columns: minmax(0, 1fr) 190px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
-.ticket-main { padding: 18px 20px; min-width: 0; }
-.ticket-main .ev-big { font: 700 1.9rem/1.05 var(--display); text-transform: uppercase; text-wrap: balance; }
-.ticket-main .meta { color: var(--muted); margin-top: 6px; }
-.stub { position: relative; border-left: 2px dashed var(--line); padding: 18px 16px; background: var(--surface-2); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; align-content: center; text-align: center; }
-.stub::before, .stub::after { content: ""; position: absolute; left: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
-.stub::before { top: -11px; } .stub::after { bottom: -11px; }
-.stub .k { font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-.stub .v { font: 700 1.5rem/1.1 var(--display); }
-.stub .qty { grid-column: 1 / -1; margin-top: 8px; font-size: .82rem; color: var(--muted); }
-
-.dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; font-size: .92rem; }
-.dl dt { color: var(--muted); }
-.dl dd { margin: 0; overflow-wrap: anywhere; }
-.profit-big { font: 600 2.2rem/1 var(--display); font-variant-numeric: tabular-nums; }
-.calc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; font-size: .9rem; margin-top: 10px; }
-.calc .num { text-align: right; }
-.calc .total { border-top: 1px solid var(--line); padding-top: 6px; font-weight: 600; }
-
-form.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
-.field { display: grid; gap: 4px; font-size: .82rem; color: var(--muted); }
-.field input, .field select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; color: var(--ink); width: 130px; font-size: .95rem; }
-.field.wide input { width: 220px; }
-.tag { display: inline-block; font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; padding: 1px 6px; border-radius: 4px; margin-left: 4px; vertical-align: 1px; }
-.field .tag { justify-self: start; margin-left: 0; }
+.seats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.seat { background: var(--surface-2); border-radius: 12px; padding: 10px; text-align: center; }
+.seat .k { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.seat .v { font: 800 1.3rem var(--display); }
+.tag { display: inline-block; font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 4px; }
 .tag.auto { background: var(--good-soft); color: var(--good); }
 .tag.main { background: var(--accent-soft); color: var(--accent); }
 .tag.manque { background: var(--warn-soft); color: var(--warn); }
-.alerte { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; font-size: .92rem; }
-.check { display: flex; align-items: center; gap: 6px; font-size: .9rem; color: var(--ink); padding-bottom: 8px; }
-.seatiks-sec { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .92rem; }
-.field select { width: 230px; }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.note { font-size: .84rem; color: var(--muted); margin: 8px 0 0; }
+.alerte { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 12px; font-size: .9rem; margin: 0 0 12px; }
 
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 8px; font-weight: 500; max-width: calc(100% - 32px); z-index: 20; }
+form.f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.field { display: grid; gap: 4px; font-size: .8rem; color: var(--muted); min-width: 0; }
+.field .tag { justify-self: start; }
+.field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 11px; color: var(--ink); font-size: .95rem; }
+.check { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--ink); grid-column: 1 / -1; }
+.btn { border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 700; background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.danger { color: var(--bad); }
+.btn.full { grid-column: 1 / -1; width: 100%; }
+.btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.note { font-size: .84rem; color: var(--muted); margin: 10px 0 0; }
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; font-size: .92rem; }
+.calc .total { border-top: 1px solid var(--line); padding-top: 8px; font-weight: 700; }
+.calc span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
 
-@media (max-width: 980px) {
-  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .grid2 { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 720px) {
-  .app { grid-template-columns: minmax(0, 1fr); background: none; }
-  nav.side { display: none; }
+/* Statistiques */
+.bars { display: grid; gap: 12px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-size: .9rem; }
+.bar-row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track { grid-column: 1 / -1; height: 8px; background: var(--surface-2); border-radius: 4px; position: relative; overflow: hidden; }
+.fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); left: 50%; }
+.kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 11px 16px; border-radius: 12px; font-weight: 500; max-width: calc(100% - 32px); z-index: 30; }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: up .18s ease-out; } }
+@keyframes up { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+@media (max-width: 640px) {
+  .tabs { display: none; }
   nav.bottom { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
-  nav.bottom button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; font-size: .72rem; color: var(--muted); padding: 4px; }
+  nav.bottom button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; font-size: .7rem; font-weight: 600; color: var(--muted); padding: 4px; }
   nav.bottom button[aria-current="page"] { color: var(--accent); }
-  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
-  h1 { font-size: 1.7rem; }
-  .ticket { grid-template-columns: minmax(0, 1fr); }
-  .stub { border-left: 0; border-top: 2px dashed var(--line); }
-  .stub::before, .stub::after { display: none; }
-  .search { margin-left: 0; flex: 1 1 100%; }
+  nav.bottom svg { width: 22px; height: 22px; }
+  main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .comptes { grid-template-columns: minmax(0, 1fr); }
+  .compte { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0 12px; }
+  .compte .ic { margin: 0; grid-row: span 2; }
+  .compte .val { grid-row: span 2; grid-column: 3; text-align: right; }
+  .compte .hint { grid-column: 2; }
+  .hero .big { font-size: 2.3rem; }
+  form.f { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
-@media (prefers-reduced-motion: no-preference) { .toast { animation: monte .18s ease-out; } }
-@keyframes monte { from { opacity: 0; transform: translate(-50%, 8px); } }
 </style>
 
-<div class="app">
-  <nav class="side" aria-label="Navigation">
-    <div class="brand">Revente Billets<small>Viagogo · StubHub · Seatiks</small></div>
-    <button data-vue="tableau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 7h6V4h-6z"/></svg>Tableau de bord</button>
-    <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/><path d="M14 4v12" stroke-dasharray="2 2"/></svg>Billets</button>
-    <button data-vue="ventes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>Ventes</button>
-    <button data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Dépenses</button>
-    <div class="side-foot">Seatiks connecté (mode réel)<br>Dernier import d'emails : il y a 2 min</div>
+<header class="top"><div class="top-in">
+  <div class="logo"><i>RB</i>Revente Billets</div>
+  <nav class="tabs" aria-label="Navigation">
+    <button data-vue="accueil">Accueil</button>
+    <button data-vue="billets">Billets</button>
+    <button data-vue="operations">Opérations</button>
+    <button data-vue="stats">Statistiques</button>
   </nav>
+</div></header>
 
-  <main id="vue" aria-live="polite"></main>
+<main id="vue" aria-live="polite"></main>
 
-  <nav class="bottom" aria-label="Navigation">
-    <button data-vue="tableau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 7h6V4h-6z"/></svg>Tableau</button>
-    <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg>Billets</button>
-    <button data-vue="ventes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>Ventes</button>
-    <button data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Dépenses</button>
-  </nav>
-</div>
+<nav class="bottom" aria-label="Navigation">
+  <button data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</button>
+  <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg>Billets</button>
+  <button data-vue="operations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h13l-3-3M17 17H4l3 3"/></svg>Opérations</button>
+  <button data-vue="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats</button>
+</nav>
 <div class="toast" id="toast" hidden></div>
 
 <script>
-// ---------- Données d'exemple (la maquette ne touche à rien de réel) ----------
-const AUJOURDHUI = new Date('2026-10-14T12:00:00');
+// ---------- Données d'exemple ----------
+const AUJ = new Date('2026-10-14T12:00:00');
+const SITES = {
+  Viagogo: { c: '#7cb342', i: 'VG' }, StubHub: { c: '#4a2c8a', i: 'SH' }, Ticketmaster: { c: '#026cdf', i: 'TM' },
+  'Fnac Spectacles': { c: '#e1a400', i: 'FN' }, AXS: { c: '#0a7f8c', i: 'AX' }, Seatiks: { c: '#1f8f5b', i: 'ST' }, Frais: { c: '#6b7385', i: '€' },
+};
+const USD_EUR = 0.93; // taux d'exemple ; le vrai site prendra le montant réellement débité (relevé bancaire)
 const commandes = [
-  { id: '656921075', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-10-05', bloc: '13C', rang: '', sieges: '', qte: 2, prix: 182.09, mail: 'quai.nord47@icloud.com', nom: 'Hugo', carte: 'Apple Pay', annonce: null, ventes: [], rembourse: false, annulee: false },
-  { id: '655651277', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-09-28', bloc: '11C', rang: '13', sieges: '35-36', qte: 2, prix: 543.29, mail: 'tribune.est12@icloud.com', nom: 'Lena Brandt', carte: '3392', annonce: { prix: 320, active: false }, ventes: [{ id: 'SK-48812', le: '2026-10-09', qte: 2, montant: 612.4, paye: true }], rembourse: false, annulee: false },
-  { id: '656373947', site: 'StubHub', ev: 'Borussia Dortmund vs Eintracht Frankfurt', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-07', bloc: '54', rang: '', sieges: '', qte: 2, prix: 237.4, devise: 'USD', mail: 'mur.jaune09@icloud.com', nom: 'Victoria', carte: '4452', annonce: null, ventes: [], rembourse: false, annulee: false },
-  { id: '656372126', site: 'StubHub', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-10-07', bloc: 'S4', rang: '', sieges: '', qte: 2, prix: 443.48, devise: 'USD', mail: 'rhein.ufer33@icloud.com', nom: 'Fanny', carte: '4452', annonce: null, ventes: [], rembourse: false, annulee: true },
-  { id: '655852602', site: 'Viagogo', ev: 'FC Bayern München vs RB Leipzig', lieu: 'Allianz Arena', date: '2026-10-17', achat: '2026-09-30', bloc: 'Lower Tier 112', rang: '8', sieges: '21-24', qte: 4, prix: 1007.02, mail: 'arena.rouge71@icloud.com', nom: 'Mathis Lampene', carte: '3392', annonce: { prix: 330, active: true }, ventes: [{ id: 'SK-48877', le: '2026-10-12', qte: 2, montant: 690, paye: false }], rembourse: false, annulee: false },
-  { id: '656569417', site: 'Viagogo', ev: 'Stevie Wonder', lieu: 'Accor Arena, Paris', date: '2026-10-15', achat: '2026-09-21', bloc: 'Upper S', rang: '88', sieges: '23-24', qte: 2, prix: 1169.97, mail: 'scene.bleue04@icloud.com', nom: 'Audrey Laga', carte: '3104', annonce: { prix: 690, active: false }, ventes: [{ id: 'SK-48790', le: '2026-10-03', qte: 2, montant: 1288, paye: true }], rembourse: false, annulee: false },
-  { id: '656600391', site: 'Viagogo', ev: 'Stevie Wonder', lieu: 'Accor Arena, Paris', date: '2026-10-15', achat: '2026-09-22', bloc: 'Lower U', rang: '23', sieges: '25-26', qte: 2, prix: 1486.15, mail: 'scene.bleue04@icloud.com', nom: 'Sebastien Ploch', carte: '3104', annonce: { prix: 700, active: false }, ventes: [{ id: 'SK-48791', le: '2026-10-04', qte: 2, montant: 1372, paye: true }], rembourse: false, annulee: false },
-  { id: '656659037', site: 'Viagogo', ev: 'Muse', lieu: 'Stade de France', date: '2026-11-27', achat: '2026-10-10', bloc: 'Fosse', rang: '', sieges: '', qte: 4, prix: 844.21, mail: 'fosse.or18@icloud.com', nom: 'Croyance Barna', carte: 'Apple Pay', annonce: null, ventes: [], rembourse: false, annulee: false },
-  { id: '656175443', site: 'Viagogo', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-09-18', bloc: '014', rang: '12', sieges: '16-17', qte: 2, prix: 497.9, mail: 'dom.vert56@icloud.com', nom: 'Cecile Fabre', carte: '3392', annonce: { prix: 230, active: false }, ventes: [{ id: 'SK-48702', le: '2026-10-08', qte: 2, montant: 438.6, paye: true }], rembourse: false, annulee: false },
-  { id: '656227224', site: 'Viagogo', ev: 'Borussia Dortmund vs Werder Bremen', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-02', bloc: '63', rang: '5', sieges: '11-14', qte: 4, prix: 861.23, mail: 'mur.jaune09@icloud.com', nom: 'Thomas Stefe', carte: '4452', annonce: { prix: 260, active: true }, ventes: [], rembourse: false, annulee: false },
-  { id: '656061209', site: 'Viagogo', ev: 'Céline Dion', lieu: 'Paris La Défense Arena', date: '2026-09-19', achat: '2026-08-30', bloc: 'Cat. 1', rang: '14', sieges: '7-8', qte: 2, prix: 895.38, mail: 'nuit.claire22@icloud.com', nom: 'Khalida Amrani', carte: '3392', annonce: { prix: 450, active: false }, ventes: [{ id: 'SK-48311', le: '2026-09-10', qte: 2, montant: 900, paye: true }], rembourse: false, annulee: false },
-  { id: '655554004', site: 'Viagogo', ev: 'England vs Spain', lieu: 'Wembley Stadium', date: '2026-09-26', achat: '2026-09-02', bloc: '135', rang: '27', sieges: '39-40', qte: 2, prix: 492.33, mail: 'tribune.est12@icloud.com', nom: 'Fernand Leone', carte: '3104', annonce: null, ventes: [], rembourse: true, annulee: false },
+  { id: '656921075', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-10-05', bloc: '13C', rang: '', sieges: '', qte: 2, prix: 182.09, mail: 'quai.nord47@icloud.com', nom: 'Hugo', carte: 'Apple Pay', annonce: null, ventes: [] },
+  { id: '655651277', site: 'Viagogo', ev: 'Hamburger SV vs VfB Stuttgart', lieu: 'Volksparkstadion', date: '2026-10-17', achat: '2026-09-28', bloc: '11C', rang: '13', sieges: '35-36', qte: 2, prix: 543.29, mail: 'tribune.est12@icloud.com', nom: 'Lena Brandt', carte: '3392', annonce: { prix: 320, active: false }, ventes: [{ id: 'SK-48812', le: '2026-10-09', qte: 2, montant: 612.4, paye: true }] },
+  { id: '656373947', site: 'StubHub', ev: 'Borussia Dortmund vs Eintracht Frankfurt', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-07', bloc: '54', rang: '', sieges: '', qte: 2, prix: 237.4, devise: 'USD', mail: 'mur.jaune09@icloud.com', nom: 'Victoria', carte: '4452', annonce: null, ventes: [] },
+  { id: '656372126', site: 'StubHub', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-10-07', bloc: 'S4', rang: '', sieges: '', qte: 2, prix: 443.48, devise: 'USD', mail: 'rhein.ufer33@icloud.com', nom: 'Fanny', carte: '4452', annonce: null, ventes: [], annulee: true },
+  { id: 'TM-58210447', site: 'Ticketmaster', ev: 'Aya Nakamura', lieu: 'Accor Arena, Paris', date: '2026-12-05', achat: '2026-10-13', bloc: 'Fosse', rang: '', sieges: '', qte: 4, prix: 356.0, mail: 'scene.bleue04@icloud.com', nom: 'Ines', carte: '3392', annonce: null, ventes: [] },
+  { id: '655852602', site: 'Viagogo', ev: 'FC Bayern München vs RB Leipzig', lieu: 'Allianz Arena', date: '2026-10-17', achat: '2026-09-30', bloc: 'Lower Tier 112', rang: '8', sieges: '21-24', qte: 4, prix: 1007.02, mail: 'arena.rouge71@icloud.com', nom: 'Mathis Lampene', carte: '3392', annonce: { prix: 330, active: true }, ventes: [{ id: 'SK-48877', le: '2026-10-12', qte: 2, montant: 690, paye: false }] },
+  { id: 'FN-2207731', site: 'Fnac Spectacles', ev: 'Stevie Wonder', lieu: 'Accor Arena, Paris', date: '2026-10-15', achat: '2026-09-21', bloc: 'Cat. 1 Gauche', rang: 'K', sieges: '23-24', qte: 2, prix: 389.5, mail: 'scene.bleue04@icloud.com', nom: 'Audrey Laga', carte: '3104', annonce: { prix: 690, active: false }, ventes: [{ id: 'SK-48790', le: '2026-10-03', qte: 2, montant: 1288, paye: true }] },
+  { id: 'AXS-90311', site: 'AXS', ev: 'Muse', lieu: 'Stade de France', date: '2026-11-27', achat: '2026-10-10', bloc: 'Fosse', rang: '', sieges: '', qte: 4, prix: 512.4, mail: 'fosse.or18@icloud.com', nom: 'Croyance Barna', carte: 'Apple Pay', annonce: null, ventes: [] },
+  { id: '656175443', site: 'Viagogo', ev: '1. FC Köln vs Borussia Mönchengladbach', lieu: 'RheinEnergie-Stadion', date: '2026-10-11', achat: '2026-09-18', bloc: '014', rang: '12', sieges: '16-17', qte: 2, prix: 497.9, mail: 'dom.vert56@icloud.com', nom: 'Cecile Fabre', carte: '3392', annonce: { prix: 230, active: false }, ventes: [{ id: 'SK-48702', le: '2026-10-08', qte: 2, montant: 438.6, paye: true }] },
+  { id: '656227224', site: 'Viagogo', ev: 'Borussia Dortmund vs Werder Bremen', lieu: 'Signal Iduna Park', date: '2026-10-24', achat: '2026-10-02', bloc: '63', rang: '5', sieges: '11-14', qte: 4, prix: 861.23, mail: 'mur.jaune09@icloud.com', nom: 'Thomas Stefe', carte: '4452', annonce: { prix: 260, active: true }, ventes: [] },
+  { id: 'TM-57990012', site: 'Ticketmaster', ev: 'Céline Dion', lieu: 'Paris La Défense Arena', date: '2026-09-19', achat: '2026-08-30', bloc: 'Cat. 1', rang: '14', sieges: '7-8', qte: 2, prix: 495.38, mail: 'nuit.claire22@icloud.com', nom: 'Khalida Amrani', carte: '3392', annonce: { prix: 450, active: false }, ventes: [{ id: 'SK-48311', le: '2026-09-10', qte: 2, montant: 900, paye: true }] },
+  { id: '655554004', site: 'Viagogo', ev: 'England vs Spain', lieu: 'Wembley Stadium', date: '2026-09-26', achat: '2026-09-02', bloc: '135', rang: '27', sieges: '39-40', qte: 2, prix: 492.33, mail: 'tribune.est12@icloud.com', nom: 'Fernand Leone', carte: '3104', annonce: null, ventes: [], rembourse: '2026-09-20' },
 ];
-// Ce que le site a pu lire dans l'email, et la section Seatiks qu'il a trouvée.
+const frais = [
+  { le: '2026-10-01', libelle: 'Nom de domaine du site', montant: 10.99 },
+  { le: '2026-09-15', libelle: 'Abonnement iCloud+', montant: 2.99 },
+  { le: '2026-10-01', libelle: 'Abonnement iCloud+', montant: 2.99 },
+];
 commandes.forEach(c => {
   c.auto = { bloc: !!c.bloc, rang: !!c.rang, sieges: !!c.sieges };
   c.libre = c.bloc === 'Fosse';
@@ -226,277 +242,267 @@ commandes.forEach(c => {
     ? { section: '', auto: false, choix: ['Block 54 · Lower', 'Block 54 · Upper', 'Category 6 (bloc au choix)'] }
     : { section: c.libre ? 'Fosse Or' : 'Block ' + c.bloc, auto: true, choix: [] };
 });
-const autresDepenses = [
-  { le: '2026-10-01', libelle: 'Nom de domaine du site', montant: 10.99 },
-  { le: '2026-09-15', libelle: 'Abonnement iCloud+', montant: 2.99 },
-  { le: '2026-10-01', libelle: 'Abonnement iCloud+', montant: 2.99 },
-];
 
 // ---------- Calculs ----------
-const eur = n => (n < 0 ? '−' : '') + Math.abs(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-const sym = c => c.devise === 'USD' ? ' $' : ' €';
-const prixAff = (c, n) => Math.abs(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + sym(c);
-const jour = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-const jourCourt = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+const fmt = (n, cur) => (n < 0 ? '−' : '') + Math.abs(n).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (cur === 'USD' ? ' $' : ' €');
+const eur = n => fmt(n);
+const sign = n => (n > 0 ? '+' : '') + eur(n);
+const coutEur = c => c.devise === 'USD' ? c.prix * USD_EUR : c.prix;
+const unit = c => coutEur(c) / c.qte;
 const vendus = c => c.ventes.reduce((s, v) => s + v.qte, 0);
-const coutUnitaire = c => c.prix / c.qte;
-const profitVente = (c, v) => v.montant - coutUnitaire(c) * v.qte;
-const places = c => c.rang ? [c.bloc, c.rang, c.sieges].filter(Boolean).join(' / ') : 'x' + c.qte + ' ' + c.bloc;
+const profitV = (c, v) => v.montant - unit(c) * v.qte;
 const actif = c => !c.rembourse && !c.annulee && vendus(c) < c.qte;
 const manquants = c => [!c.bloc && 'le bloc', !c.libre && !c.rang && 'le rang', !c.libre && !c.sieges && 'les sièges'].filter(Boolean);
 const aCompleter = c => actif(c) && (manquants(c).length > 0 || !c.seatiks.section);
-const passe = c => new Date(c.date + 'T23:59:00') < AUJOURDHUI;
+const places = c => c.libre || !c.rang ? 'x' + c.qte + ' · ' + c.bloc : [c.bloc, 'rang ' + c.rang, c.sieges].filter(Boolean).join(' · ');
+const jourLong = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const jourCourt = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+const av = site => { const s = SITES[site] || { c: '#6b7385', i: site.slice(0, 2).toUpperCase() }; return '<span class="av" style="background:' + s.c + '">' + s.i + '</span>'; };
 
 function statut(c) {
-  if (c.rembourse) return { cle: 'rembourse', txt: 'Remboursé' };
-  if (c.annulee) return { cle: 'annule', txt: 'Annulation probable' };
+  if (c.rembourse) return ['rembourse', 'Remboursé'];
+  if (c.annulee) return ['annule', 'Annulation probable'];
   const v = vendus(c);
-  if (v >= c.qte) return { cle: 'vendu', txt: 'Vendu' };
-  if (v > 0) return { cle: 'partiel', txt: 'Vendu ' + v + '/' + c.qte };
-  if (c.annonce && c.annonce.active) return { cle: 'vente', txt: 'En vente' };
-  return { cle: 'list', txt: 'À lister' };
+  if (v >= c.qte) return ['vendu', 'Vendu'];
+  if (v > 0) return ['partiel', 'Vendu ' + v + '/' + c.qte];
+  if (c.annonce && c.annonce.active) return ['vente', 'En vente'];
+  return ['list', 'À lister'];
 }
-const pill = c => { const s = statut(c); return '<span class="pill p-' + s.cle + '">' + s.txt + '</span>'; };
+const pill = c => { const [k, t] = statut(c); return '<span class="pill p-' + k + '">' + t + '</span>'; };
+
+function operations() {
+  const ops = [];
+  commandes.forEach(c => {
+    ops.push({ type: 'achat', le: c.achat, c, montant: -coutEur(c), titre: c.ev, sous: 'Achat ' + c.site + ' · ' + c.qte + ' billet(s)', site: c.site, orig: c.devise === 'USD' ? fmt(-c.prix, 'USD') : '' });
+    if (c.rembourse) ops.push({ type: 'remb', le: c.rembourse, c, montant: coutEur(c), titre: c.ev, sous: 'Remboursement ' + c.site, site: c.site });
+    c.ventes.forEach(v => ops.push({ type: 'vente', le: v.le, c, v, montant: v.montant, titre: c.ev, sous: 'Vente Seatiks · ' + v.qte + ' billet(s)' + (v.paye ? '' : ' · en attente'), site: 'Seatiks', profit: profitV(c, v) }));
+  });
+  frais.forEach(f => ops.push({ type: 'frais', le: f.le, montant: -f.montant, titre: f.libelle, sous: 'Frais', site: 'Frais' }));
+  return ops.sort((a, b) => b.le.localeCompare(a.le));
+}
 
 function totaux() {
-  let profit = 0, aRecevoir = 0, stockValeur = 0, stockBillets = 0, depenses = 0, chiffre = 0;
+  let profit = 0, aRecevoir = 0, nAttente = 0, stock = 0, stockN = 0, depMois = 0, recuMois = 0;
+  const mois = '2026-10';
   commandes.forEach(c => {
-    if (!c.rembourse) depenses += c.prix;
-    c.ventes.forEach(v => { profit += profitVente(c, v); chiffre += v.montant; if (!v.paye) aRecevoir += v.montant; });
-    const reste = c.qte - vendus(c);
-    if (!c.rembourse && !c.annulee && reste > 0) { stockBillets += reste; stockValeur += reste * coutUnitaire(c); }
+    c.ventes.forEach(v => { profit += profitV(c, v); if (!v.paye) { aRecevoir += v.montant; nAttente++; } if (v.le.startsWith(mois)) recuMois += v.montant; });
+    const r = c.qte - vendus(c);
+    if (!c.rembourse && !c.annulee && r > 0) { stock += r * unit(c); stockN += r; }
+    if (c.achat.startsWith(mois) && !c.rembourse) depMois += coutEur(c);
   });
-  depenses += autresDepenses.reduce((s, d) => s + d.montant, 0);
-  return { profit, aRecevoir, stockValeur, stockBillets, depenses, chiffre };
+  const fraisT = frais.reduce((s, f) => s + f.montant, 0);
+  frais.forEach(f => { if (f.le.startsWith(mois)) depMois += f.montant; });
+  const profitMois = commandes.reduce((s, c) => s + c.ventes.filter(v => v.le.startsWith(mois)).reduce((t, v) => t + profitV(c, v), 0), 0) - frais.filter(f => f.le.startsWith(mois)).reduce((s, f) => s + f.montant, 0);
+  return { net: profit - fraisT, profitMois, aRecevoir, nAttente, stock, stockN, depMois, recuMois };
 }
 
 // ---------- Vues ----------
-let vueCourante = 'tableau', filtre = 'tous', recherche = '', detailId = null;
-const $vue = document.getElementById('vue');
-const bandeau = '<div class="demo"><strong>Maquette</strong> Toutes les commandes et ventes ici sont des exemples. Les boutons fonctionnent, mais rien n\'est envoyé à Seatiks.</div>';
+let vue = 'accueil', filtreOps = 'tout', filtreBillets = 'tous', recherche = '', detailId = null, retour = 'accueil';
+const $ = document.getElementById('vue');
+const demo = '<div class="demo"><b>Maquette.</b> Toutes les données sont des exemples, et rien n\'est envoyé à Seatiks.</div>';
 
-function vueTableau() {
+function ligneOp(o) {
+  const cls = o.montant > 0 ? 'plus' : 'minus';
+  return '<button class="op" ' + (o.c ? 'data-detail="' + o.c.id + '"' : 'data-frais') + '>' + av(o.site) +
+    '<span class="mid"><span class="t">' + o.titre + '</span><span class="s">' + o.sous + '</span></span>' +
+    '<span class="amt"><span class="a ' + cls + '">' + sign(o.montant) + '</span>' +
+    (o.type === 'vente' ? '<span class="p ' + (o.profit >= 0 ? 'plus' : 'neg') + '">bénéfice ' + sign(o.profit) + '</span>' : o.orig ? '<span class="p sub">' + o.orig + '</span>' : '') + '</span></button>';
+}
+function fil(ops) {
+  let html = '', cur = '';
+  ops.forEach(o => {
+    if (o.le !== cur) {
+      cur = o.le;
+      const j = Math.round((AUJ - new Date(o.le + 'T12:00:00')) / 864e5);
+      html += '<div class="day">' + (j === 0 ? "Aujourd'hui" : j === 1 ? 'Hier' : jourLong(o.le)) + '</div>';
+    }
+    html += ligneOp(o);
+  });
+  return '<div class="card">' + (html || '<p class="sub" style="padding:16px">Aucune opération.</p>') + '</div>';
+}
+
+function sparkline() {
+  const pts = commandes.flatMap(c => c.ventes.map(v => ({ le: v.le, p: profitV(c, v) }))).concat(frais.map(f => ({ le: f.le, p: -f.montant }))).sort((a, b) => a.le.localeCompare(b.le));
+  let cum = 0; const ys = [0].concat(pts.map(x => (cum += x.p)));
+  const W = 300, H = 70, min = Math.min(0, ...ys), max = Math.max(...ys), rng = max - min || 1;
+  const xy = ys.map((y, i) => [i / (ys.length - 1) * W, H - 6 - (y - min) / rng * (H - 12)]);
+  const line = xy.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const last = xy[xy.length - 1];
+  return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-label="Évolution du bénéfice cumulé">' +
+    '<polygon points="0,' + H + ' ' + line + ' ' + W + ',' + H + '" fill="rgb(255 255 255 / .10)"/>' +
+    '<polyline points="' + line + '" fill="none" stroke="var(--hero-ink)" stroke-width="2" vector-effect="non-scaling-stroke"/>' +
+    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="3.5" fill="var(--hero-ink)"/></svg>';
+}
+
+function vueAccueil() {
   const t = totaux();
-  const parEv = {};
-  commandes.forEach(c => c.ventes.forEach(v => { parEv[c.ev] = (parEv[c.ev] || 0) + profitVente(c, v); }));
-  const lignes = Object.entries(parEv).sort((a, b) => b[1] - a[1]);
-  const max = Math.max(1, ...lignes.map(l => Math.abs(l[1])));
-  const aNeg = lignes.some(l => l[1] < 0);
-  const zero = aNeg ? 50 : 0; // en % : axe au milieu s'il y a des pertes
-  const echelle = aNeg ? 50 : 100;
-  const bars = lignes.map(([ev, p]) => {
-    const w = Math.abs(p) / max * echelle;
-    const left = p >= 0 ? zero : zero - w;
-    return '<div class="bar-row"><span class="bar-name">' + ev + '</span><span class="num ' + (p >= 0 ? 'pos' : 'neg') + '">' + eur(p) + '</span>' +
-      '<div class="bar-track"><div class="bar-fill" style="left:' + left + '%;width:' + w + '%;background:var(' + (p >= 0 ? '--good' : '--bad') + ')"></div>' + (aNeg ? '<div class="bar-zero" style="left:50%"></div>' : '') + '</div></div>';
-  }).join('');
-
-  const aLister = commandes.filter(c => statut(c).cle === 'list' && !passe(c));
-  const nonPayees = commandes.flatMap(c => c.ventes.filter(v => !v.paye));
-  const annulees = commandes.filter(c => c.annulee && !c.rembourse);
-  const completer = commandes.filter(aCompleter);
-  const bientot = commandes.filter(c => { const r = c.qte - vendus(c); const j = (new Date(c.date) - AUJOURDHUI) / 864e5; return r > 0 && !c.rembourse && !c.annulee && j >= 0 && j <= 7; });
-
-  return bandeau +
-    '<div class="head"><div><h1>Tableau de bord</h1><p class="sub">Au ' + AUJOURDHUI.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + '</p></div></div>' +
-    '<div class="kpis">' +
-      '<div class="kpi"><div class="lbl">Bénéfice réalisé</div><div class="val ' + (t.profit >= 0 ? 'pos' : 'neg') + '">' + eur(t.profit) + '</div><div class="hint">sur ' + eur(t.chiffre) + ' de ventes</div></div>' +
-      '<div class="kpi"><div class="lbl">Argent à recevoir</div><div class="val">' + eur(t.aRecevoir) + '</div><div class="hint">' + nonPayees.length + ' vente(s) pas encore payée(s)</div></div>' +
-      '<div class="kpi"><div class="lbl">Billets non vendus</div><div class="val">' + t.stockBillets + '</div><div class="hint">' + eur(t.stockValeur) + ' payés à l\'achat</div></div>' +
-      '<div class="kpi"><div class="lbl">Dépenses totales</div><div class="val">' + eur(t.depenses) + '</div><div class="hint">achats + autres frais</div></div>' +
+  const nComp = commandes.filter(aCompleter).length;
+  const nLister = commandes.filter(c => statut(c)[0] === 'list' && actif(c) && !aCompleter(c)).length;
+  const nAnn = commandes.filter(c => c.annulee && !c.rembourse).length;
+  const ent = Math.floor(Math.abs(t.net)), dec = Math.round((Math.abs(t.net) - ent) * 100);
+  const alertes = [
+    nComp && ['var(--warn-soft)', 'var(--warn)', nComp, 'Places à compléter', 'Le site n\'a pas tout trouvé dans l\'email', 'completer'],
+    nLister && ['var(--accent-soft)', 'var(--accent)', nLister, 'Prêts à mettre en vente', 'Places complètes, pas encore sur Seatiks', 'list'],
+    nAnn && ['var(--bad-soft)', 'var(--bad)', nAnn, 'Annulation probable', 'StubHub : « a further email »', 'annule'],
+  ].filter(Boolean);
+  return demo +
+    '<section class="hero"><div class="lbl">Bénéfice net</div><div class="big n">' + (t.net < 0 ? '−' : '') + ent.toLocaleString('fr-FR') + '<small>,' + String(dec).padStart(2, '0') + ' €</small></div>' +
+      '<div class="delta">Ce mois-ci <b>' + sign(t.profitMois) + '</b></div>' + sparkline() +
+      '<div class="hero-foot"><span>Après prix d\'achat et frais</span><span>Seatiks connecté · emails lus il y a 2 min</span></div></section>' +
+    '<div class="comptes">' +
+      '<button class="compte" data-aller="operations" data-filtre="attente"><div class="ic" style="background:var(--warn-soft);color:var(--warn)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="lbl">À recevoir</div><div class="val n">' + eur(t.aRecevoir) + '</div><div class="hint">' + t.nAttente + ' vente(s) en attente</div></button>' +
+      '<button class="compte" data-aller="billets"><div class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg></div><div class="lbl">Stock</div><div class="val n">' + eur(t.stock) + '</div><div class="hint">' + t.stockN + ' billets non vendus</div></button>' +
+      '<button class="compte" data-aller="operations" data-filtre="achat"><div class="ic" style="background:var(--surface-2);color:var(--ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></div><div class="lbl">Dépenses d\'octobre</div><div class="val n">' + eur(t.depMois) + '</div><div class="hint">' + eur(t.recuMois) + ' reçus ce mois</div></button>' +
     '</div>' +
-    '<div class="grid2">' +
-      '<section class="panel"><h2>Bénéfice par événement</h2><div class="bars">' + (bars || '<p class="sub">Aucune vente pour l\'instant.</p>') + '</div></section>' +
-      '<section class="panel"><h2>À faire</h2><ul class="todo">' +
-        '<li><span><b>Places à compléter</b><br><span class="sub">Rang, sièges ou section Seatiks introuvables dans l\'email</span></span><span class="count">' + completer.length + '</span></li>' +
-        '<li><span><b>À mettre en vente</b><br><span class="sub">Billets achetés, pas encore listés</span></span><span class="count">' + aLister.length + '</span></li>' +
-        '<li><span><b>Match ou concert dans moins de 7 jours</b><br><span class="sub">Il reste des billets à vendre</span></span><span class="count">' + bientot.length + '</span></li>' +
-        '<li><span><b>Paiements en attente</b><br><span class="sub">Ventes Seatiks pas encore payées</span></span><span class="count">' + nonPayees.length + '</span></li>' +
-        '<li><span><b>Annulations probables</b><br><span class="sub">StubHub : « a further email »</span></span><span class="count">' + annulees.length + '</span></li>' +
-      '</ul><div class="actions"><button class="btn" data-aller="billets" data-filtre="completer">Compléter les places</button><button class="btn" data-aller="billets" data-filtre="list">Voir les billets à lister</button></div></section>' +
-    '</div>';
+    (alertes.length ? '<div class="alerts">' + alertes.map(a => '<button class="alert" data-aller="billets" data-fb="' + a[5] + '"><span class="dot" style="background:' + a[0] + ';color:' + a[1] + '">' + a[2] + '</span><span class="txt"><b>' + a[3] + '</b><span class="sub">' + a[4] + '</span></span><span class="chev">›</span></button>').join('') + '</div>' : '') +
+    '<div><div class="row-head"><h2>Opérations récentes</h2><button class="linkbtn" data-aller="operations">Tout voir</button></div>' + fil(operations().slice(0, 7)) + '</div>';
+}
+
+function vueOperations() {
+  const f = [['tout', 'Tout'], ['achat', 'Achats'], ['vente', 'Ventes'], ['attente', 'En attente'], ['remb', 'Remboursements'], ['frais', 'Frais']];
+  const ops = operations().filter(o => (filtreOps === 'tout' || (filtreOps === 'attente' ? o.type === 'vente' && !o.v.paye : o.type === filtreOps)) &&
+    (o.titre + ' ' + o.sous).toLowerCase().includes(recherche.toLowerCase()));
+  const tot = ops.reduce((s, o) => s + o.montant, 0);
+  return demo + '<div class="row-head"><h1>Opérations</h1><span class="sub n">' + ops.length + ' opérations · ' + sign(tot) + '</span></div>' +
+    '<input class="search" id="recherche" type="search" placeholder="Rechercher" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher une opération">' +
+    '<div class="chips">' + f.map(x => '<button class="chip" data-fo="' + x[0] + '" aria-pressed="' + (filtreOps === x[0]) + '">' + x[1] + '</button>').join('') + '</div>' +
+    fil(ops) +
+    '<div class="card pad"><div class="row-head"><h2>Ajouter des frais</h2></div><form class="f" id="form-frais"><label class="field">Date<input id="fr-date" type="date" value="2026-10-14" required></label><label class="field">Libellé<input id="fr-lib" placeholder="Ex. frais de transfert" required></label><label class="field">Montant (€)<input id="fr-mt" type="number" min="0" step="0.01" required></label><button class="btn full" type="submit">Ajouter</button></form>' +
+    '<p class="note">Bientôt : bouton « Importer un relevé » pour rapprocher vos achats avec les opérations de votre banque (montant réellement débité, frais de change).</p></div>';
 }
 
 function vueBillets() {
-  const filtres = [['tous', 'Tous'], ['list', 'À lister'], ['vente', 'En vente'], ['vendu', 'Vendus'], ['annule', 'Annulés / remboursés'], ['completer', 'Places à compléter']];
+  const f = [['tous', 'Tous'], ['completer', 'À compléter'], ['list', 'À lister'], ['vente', 'En vente'], ['vendu', 'Vendus'], ['annule', 'Annulés']];
   const liste = commandes.filter(c => {
-    const s = statut(c).cle;
-    const okFiltre = filtre === 'tous' || (filtre === 'vendu' ? (s === 'vendu' || s === 'partiel') : filtre === 'annule' ? (s === 'annule' || s === 'rembourse') : filtre === 'completer' ? aCompleter(c) : s === filtre);
-    return okFiltre && (c.ev + ' ' + c.id + ' ' + c.bloc).toLowerCase().includes(recherche.toLowerCase());
+    const k = statut(c)[0];
+    const ok = filtreBillets === 'tous' || (filtreBillets === 'completer' ? aCompleter(c) : filtreBillets === 'vendu' ? (k === 'vendu' || k === 'partiel') : filtreBillets === 'annule' ? (k === 'annule' || k === 'rembourse') : k === filtreBillets);
+    return ok && (c.ev + ' ' + c.id + ' ' + c.site).toLowerCase().includes(recherche.toLowerCase());
   }).sort((a, b) => a.date.localeCompare(b.date));
-  const rows = liste.map(c => '<tr class="click" data-detail="' + c.id + '"><td class="ev">' + c.ev + '<small>' + c.lieu + '</small></td><td class="num">' + jour(c.date) + '</td><td>' + places(c) + '</td><td class="num r">' + vendus(c) + '/' + c.qte + '</td><td class="num r">' + prixAff(c, c.prix) + '</td><td class="num r">' + (c.annonce ? eur(c.annonce.prix) : '—') + '</td><td>' + pill(c) + (aCompleter(c) ? ' <span class="pill p-attente">Places à compléter</span>' : '') + '</td><td>' + c.site + '</td></tr>').join('');
-  return bandeau +
-    '<div class="head"><div><h1>Billets</h1><p class="sub">' + commandes.length + ' commandes importées automatiquement depuis les emails Viagogo et StubHub</p></div></div>' +
-    '<div class="toolbar">' + filtres.map(f => '<button class="chip" data-filtre="' + f[0] + '" aria-pressed="' + (filtre === f[0]) + '">' + f[1] + '</button>').join('') +
-    '<input class="search" id="recherche" type="search" placeholder="Rechercher un événement, un n° de commande…" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher"></div>' +
-    '<div class="table-wrap"><table><thead><tr><th>Événement</th><th>Date</th><th>Places</th><th class="r">Vendus</th><th class="r">Prix d\'achat</th><th class="r">Prix annonce (par billet)</th><th>Statut</th><th>Acheté sur</th></tr></thead><tbody>' +
-    (rows || '<tr><td colspan="8" class="sub">Aucun billet ne correspond.</td></tr>') + '</tbody></table></div>';
+  return demo + '<div class="row-head"><h1>Billets</h1><span class="sub">' + commandes.length + ' commandes, tous sites</span></div>' +
+    '<input class="search" id="recherche" type="search" placeholder="Rechercher un événement, un site, un n° de commande" value="' + recherche.replace(/"/g, '&quot;') + '" aria-label="Rechercher un billet">' +
+    '<div class="chips">' + f.map(x => '<button class="chip" data-fb="' + x[0] + '" aria-pressed="' + (filtreBillets === x[0]) + '">' + x[1] + '</button>').join('') + '</div>' +
+    '<div class="card">' + (liste.map(c => '<button class="op" data-detail="' + c.id + '">' + av(c.site) +
+      '<span class="mid"><span class="t">' + c.ev + '</span><span class="s">' + jourCourt(c.date) + ' · ' + places(c) + '</span></span>' +
+      '<span class="amt"><span class="a">' + vendus(c) + '/' + c.qte + '</span><span class="p">' + pill(c) + (aCompleter(c) ? ' <span class="pill p-attente">À compléter</span>' : '') + '</span></span></button>').join('') || '<p class="sub" style="padding:16px">Aucun billet ne correspond.</p>') + '</div>';
 }
 
 function vueDetail() {
   const c = commandes.find(x => x.id === detailId);
   const reste = c.qte - vendus(c);
-  const profit = c.ventes.reduce((s, v) => s + profitVente(c, v), 0);
+  const profit = c.ventes.reduce((s, v) => s + profitV(c, v), 0);
   const recu = c.ventes.reduce((s, v) => s + v.montant, 0);
-  const coutVendu = coutUnitaire(c) * vendus(c);
-  const ventesHtml = c.ventes.length ? '<div class="table-wrap" style="margin-top:8px"><table style="min-width:520px"><thead><tr><th>Vente</th><th>Date</th><th class="r">Billets</th><th class="r">Reçu</th><th class="r">Bénéfice</th><th>Paiement</th></tr></thead><tbody>' +
-    c.ventes.map(v => { const p = profitVente(c, v); return '<tr><td class="num">' + v.id + '</td><td class="num">' + jour(v.le) + '</td><td class="num r">' + v.qte + '</td><td class="num r">' + eur(v.montant) + '</td><td class="num r ' + (p >= 0 ? 'pos' : 'neg') + '">' + eur(p) + '</td><td>' + (v.paye ? '<span class="pill p-vendu">Payé</span>' : '<span class="pill p-attente">En attente</span>') + '</td></tr>'; }).join('') +
-    '</tbody></table></div>' : '<p class="sub">Aucune vente pour l\'instant.</p>';
-
-  const tag = k => c.auto[k] ? '<span class="tag auto">auto</span>' : (c[k] ? '<span class="tag main">ajouté par vous</span>' : (k !== 'bloc' && c.libre ? '<span class="tag main">non numéroté</span>' : '<span class="tag manque">à compléter</span>'));
+  const tag = k => c.auto[k] ? '<span class="tag auto">auto</span>' : c[k] ? '<span class="tag main">ajouté par vous</span>' : k !== 'bloc' && c.libre ? '<span class="tag main">non numéroté</span>' : '<span class="tag manque">à compléter</span>';
   const esc = v => String(v || '').replace(/"/g, '&quot;');
   const manque = manquants(c);
-  const placesHtml = '<section class="panel" style="margin-bottom:16px"><h2>Places</h2>' +
-    (actif(c) && manque.length
-      ? '<p class="alerte">Le site n\'a pas trouvé ' + manque.join(', ').replace(/, ([^,]*)$/, ' et $1') + ' dans l\'email ' + c.site + '. Complétez-les ici avant la mise en vente. Si les places ne sont pas numérotées (fosse, pelouse), cochez « Placement libre ».</p>'
-      : '<p class="sub">Lu automatiquement dans l\'email ' + c.site + '. Corrigez si besoin : c\'est cette version qui part sur Seatiks.</p>') +
-    '<form class="inline" id="form-places">' +
-      '<label class="field">Bloc ' + tag('bloc') + '<input id="pl-bloc" value="' + esc(c.bloc) + '" required></label>' +
-      '<label class="field">Rang ' + tag('rang') + '<input id="pl-rang" value="' + esc(c.rang) + '" placeholder="ex. 13"' + (c.libre ? ' disabled' : '') + '></label>' +
-      '<label class="field">Sièges ' + tag('sieges') + '<input id="pl-sieges" value="' + esc(c.sieges) + '" placeholder="ex. 35-36"' + (c.libre ? ' disabled' : '') + '></label>' +
-      '<label class="check"><input type="checkbox" id="pl-libre"' + (c.libre ? ' checked' : '') + '> Placement libre</label>' +
-      '<button class="btn" type="submit">Enregistrer les places</button></form>' +
-    '<div class="seatiks-sec"><span>Section sur Seatiks : ' + (c.seatiks.section
-      ? '<b>' + c.seatiks.section + '</b><span class="tag ' + (c.seatiks.auto ? 'auto">trouvée automatiquement' : 'main">choisie par vous') + '</span>'
-      : '<span class="tag manque">pas trouvée</span>') + '</span>' +
-      (c.seatiks.choix.length ? '<label class="field">' + (c.seatiks.section ? 'Changer la section' : 'Choisissez la section Seatiks') + '<select id="pl-section"><option value="">Choisir…</option>' +
-        c.seatiks.choix.map(o => '<option' + (o === c.seatiks.section ? ' selected' : '') + '>' + o + '</option>').join('') + '</select></label>' : '') +
-    '</div></section>';
 
-  let annonceHtml;
-  if (c.rembourse || c.annulee) annonceHtml = '<p class="sub">Commande ' + (c.rembourse ? 'remboursée' : 'probablement annulée') + ' : pas de mise en vente.</p>';
-  else if (reste <= 0) annonceHtml = '<p class="sub">Tous les billets sont vendus.</p>';
-  else if (aCompleter(c)) annonceHtml = '<p class="alerte">Complétez d\'abord les places au-dessus' + (c.seatiks.section ? '' : ' et choisissez la section Seatiks') + ' : le site ne publie rien d\'incomplet sur Seatiks.</p>';
-  else annonceHtml =
-    (c.annonce && c.annonce.active ? '<p>En vente sur Seatiks à <b class="num">' + eur(c.annonce.prix) + '</b> par billet, ' + reste + ' billet(s), toutes les plateformes.</p>' : '<p class="sub">Pas en vente pour l\'instant. ' + reste + ' billet(s) disponible(s).</p>') +
-    '<form class="inline" id="form-annonce"><label class="field">Prix par billet (€)<input id="prix-annonce" type="number" min="1" step="0.01" inputmode="decimal" value="' + (c.annonce ? c.annonce.prix : '') + '" required></label>' +
-    '<button class="btn primary" type="submit">' + (c.annonce && c.annonce.active ? 'Changer le prix' : 'Mettre en vente sur Seatiks') + '</button>' +
-    (c.annonce && c.annonce.active ? '<button class="btn danger" type="button" id="retirer">Retirer de la vente</button>' : '') + '</form>' +
-    '<p class="note">Sera publié : ' + c.seatiks.section + (c.libre ? ' · placement libre' : ' · rang ' + c.rang + ' · sièges ' + c.sieges) + ' · ' + reste + ' billet(s).</p>' +
-    '<p class="note">E-ticket · tous les billets ensemble · toutes les plateformes · n° de commande ' + c.site + ' en note interne. Marge si tout se vend à ce prix : <b class="num" id="marge">' + (c.annonce ? eur(c.annonce.prix * reste * 0.9 - coutUnitaire(c) * reste) : '—') + '</b> (estimation, après environ 10 % de frais).</p>';
+  let vente;
+  if (c.rembourse || c.annulee) vente = '<p class="sub">Commande ' + (c.rembourse ? 'remboursée' : 'probablement annulée') + ' : pas de mise en vente.</p>';
+  else if (reste <= 0) vente = '<p class="sub">Tous les billets sont vendus.</p>';
+  else if (aCompleter(c)) vente = '<p class="alerte">Complétez d\'abord les places' + (c.seatiks.section ? '' : ' et choisissez la section Seatiks') + '. Le site ne publie rien d\'incomplet.</p>';
+  else vente = (c.annonce && c.annonce.active ? '<p style="margin:0 0 10px">En vente à <b class="n">' + eur(c.annonce.prix) + '</b> par billet · ' + reste + ' billet(s) · toutes les plateformes</p>' : '<p class="sub" style="margin:0 0 10px">Pas encore en vente · ' + reste + ' billet(s) disponible(s)</p>') +
+    '<form class="f" id="form-annonce"><label class="field" style="grid-column:1/-1">Prix par billet (€)<input id="prix" type="number" min="1" step="0.01" inputmode="decimal" value="' + (c.annonce ? c.annonce.prix : '') + '" required></label>' +
+    '<button class="btn primary full" type="submit">' + (c.annonce && c.annonce.active ? 'Changer le prix' : 'Mettre en vente sur Seatiks') + '</button>' +
+    (c.annonce && c.annonce.active ? '<button class="btn danger full" type="button" id="retirer">Retirer de la vente</button>' : '') + '</form>' +
+    '<p class="note">Sera publié : ' + c.seatiks.section + (c.libre ? ' · placement libre' : ' · rang ' + c.rang + ' · sièges ' + c.sieges) + ' · ' + reste + ' billet(s) · E-ticket · tous ensemble · n° ' + c.site + ' en note interne.<br>Bénéfice si tout se vend à ce prix : <b class="n" id="marge">' + (c.annonce ? sign(c.annonce.prix * reste * 0.9 - unit(c) * reste) : '—') + '</b> (environ 10 % de frais Seatiks, à confirmer).</p>';
 
-  return bandeau +
-    '<div class="head"><button class="link" data-aller="billets">← Retour aux billets</button></div>' +
-    '<div class="ticket"><div class="ticket-main"><div>' + pill(c) + '</div><div class="ev-big" style="margin-top:8px">' + c.ev + '</div><div class="meta">' + c.lieu + ' · ' + new Date(c.date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</div></div>' +
-      '<div class="stub"><div><div class="k">Bloc</div><div class="v">' + c.bloc + '</div></div><div><div class="k">Rang</div><div class="v">' + (c.rang || '—') + '</div></div><div><div class="k">Sièges</div><div class="v">' + (c.sieges || '—') + '</div></div><div class="qty">' + c.qte + ' billet(s) · ' + vendus(c) + ' vendu(s)</div></div></div>' +
-    placesHtml +
-    '<div class="grid2">' +
-      '<section class="panel"><h2>Mise en vente Seatiks</h2>' + annonceHtml + '<h2 style="margin-top:20px">Ventes</h2>' + ventesHtml + '</section>' +
-      '<section class="panel"><h2>Bénéfice</h2><div class="profit-big ' + (profit >= 0 ? 'pos' : 'neg') + '">' + eur(profit) + '</div>' +
-        '<div class="calc"><span>Reçu pour ' + vendus(c) + ' billet(s)</span><span class="num">' + eur(recu) + '</span><span>Coût de ces billets</span><span class="num">' + eur(-coutVendu) + '</span><span class="total">Bénéfice</span><span class="num total">' + eur(profit) + '</span></div>' +
-        '<h2 style="margin-top:20px">Commande</h2><dl class="dl"><dt>N° ' + c.site + '</dt><dd class="num">' + c.id + '</dd><dt>Achetée le</dt><dd>' + jour(c.achat) + '</dd><dt>Prix d\'achat</dt><dd class="num">' + prixAff(c, c.prix) + ' (' + prixAff(c, coutUnitaire(c)) + ' / billet)</dd><dt>Adresse</dt><dd>' + c.mail + '</dd><dt>Nom</dt><dd>' + c.nom + '</dd><dt>Paiement</dt><dd>' + (/^\d{4}$/.test(c.carte) ? 'Carte •••• ' + c.carte : c.carte) + '</dd></dl>' +
-        '<div class="actions">' + (c.rembourse ? '<button class="btn" id="rembourse">Annuler « remboursé »</button>' : '<button class="btn" id="rembourse">Marquer comme remboursé</button>') +
-        (reste > 0 && !c.rembourse ? '<button class="btn" id="vente-main">Ajouter une vente à la main</button>' : '') + '</div>' +
-        '<form class="inline" id="form-vente" hidden style="margin-top:12px"><label class="field">Billets<input id="vm-qte" type="number" min="1" max="' + reste + '" value="' + reste + '" required></label><label class="field">Montant reçu (€)<input id="vm-montant" type="number" min="0" step="0.01" required></label><button class="btn primary" type="submit">Enregistrer</button></form>' +
-      '</section>' +
-    '</div>';
+  return '<button class="linkbtn back" data-aller="' + retour + '">‹ Retour</button>' +
+    '<div class="det-head">' + av(c.site) + '<div class="big n">' + (profit ? sign(profit) : eur(-coutEur(c))) + '</div><div class="t">' + c.ev + '</div><div class="s">' + (profit ? 'Bénéfice sur ' + vendus(c) + ' billet(s) vendu(s)' : 'Acheté sur ' + c.site + ' le ' + jourCourt(c.achat)) + '</div><div style="margin-top:8px">' + pill(c) + '</div></div>' +
+
+    '<div class="sec-title">Places</div><div class="card pad">' +
+      (actif(c) && manque.length ? '<p class="alerte">Le site n\'a pas trouvé ' + manque.join(', ').replace(/, ([^,]*)$/, ' et $1') + ' dans l\'email ' + c.site + '. Complétez-les ici, ou cochez « Placement libre » pour une fosse ou une pelouse.</p>' : '') +
+      '<div class="seats"><div class="seat"><div class="k">Bloc</div><div class="v">' + (c.bloc || '—') + '</div></div><div class="seat"><div class="k">Rang</div><div class="v">' + (c.rang || '—') + '</div></div><div class="seat"><div class="k">Sièges</div><div class="v">' + (c.sieges || '—') + '</div></div></div>' +
+      '<form class="f" id="form-places" style="margin-top:12px">' +
+        '<label class="field">Bloc ' + tag('bloc') + '<input id="pl-bloc" value="' + esc(c.bloc) + '" required></label>' +
+        '<label class="field">Rang ' + tag('rang') + '<input id="pl-rang" value="' + esc(c.rang) + '" placeholder="ex. 13"' + (c.libre ? ' disabled' : '') + '></label>' +
+        '<label class="field">Sièges ' + tag('sieges') + '<input id="pl-sieges" value="' + esc(c.sieges) + '" placeholder="ex. 35-36"' + (c.libre ? ' disabled' : '') + '></label>' +
+        '<label class="check"><input type="checkbox" id="pl-libre"' + (c.libre ? ' checked' : '') + '> Placement libre (fosse, pelouse, places non numérotées)</label>' +
+        (c.seatiks.choix.length ? '<label class="field" style="grid-column:1/-1">Section sur Seatiks ' + (c.seatiks.section ? '<span class="tag main">choisie par vous</span>' : '<span class="tag manque">pas trouvée</span>') + '<select id="pl-section"><option value="">Choisir la section…</option>' + c.seatiks.choix.map(o => '<option' + (o === c.seatiks.section ? ' selected' : '') + '>' + o + '</option>').join('') + '</select></label>'
+          : '<p class="note" style="grid-column:1/-1;margin:0">Section sur Seatiks : <b>' + c.seatiks.section + '</b> <span class="tag auto">trouvée automatiquement</span></p>') +
+        '<button class="btn full" type="submit">Enregistrer les places</button></form></div>' +
+
+    '<div class="sec-title">Mise en vente Seatiks</div><div class="card pad">' + vente + '</div>' +
+
+    '<div class="sec-title">Bénéfice</div><div class="card pad"><div class="calc"><span>Reçu pour ' + vendus(c) + ' billet(s)</span><span>' + eur(recu) + '</span><span>Coût de ces billets</span><span>' + eur(-unit(c) * vendus(c)) + '</span><span class="total">Bénéfice</span><span class="total ' + (profit >= 0 ? 'plus' : 'neg') + '">' + sign(profit) + '</span></div>' +
+      (c.ventes.length ? '<div class="list" style="margin:12px -16px -16px">' + c.ventes.map(v => '<div class="li"><span>' + v.id + ' · ' + jourCourt(v.le) + ' · ' + v.qte + ' billet(s)</span><span>' + eur(v.montant) + ' <button class="pill ' + (v.paye ? 'p-vendu' : 'p-attente') + '" style="border:0" data-payer="' + v.id + '">' + (v.paye ? 'Payé' : 'En attente') + '</button></span></div>').join('') + '</div>' : '') + '</div>' +
+
+    '<div class="sec-title">Commande</div><div class="card"><div class="list">' +
+      '<div class="li"><span>Site</span><span>' + c.site + '</span></div><div class="li"><span>N° de commande</span><span class="n">' + c.id + '</span></div>' +
+      '<div class="li"><span>Événement</span><span>' + jourCourt(c.date) + ' · ' + c.lieu + '</span></div>' +
+      '<div class="li"><span>Prix d\'achat</span><span class="n">' + fmt(c.prix, c.devise) + (c.devise === 'USD' ? ' ≈ ' + eur(coutEur(c)) : '') + '</span></div>' +
+      '<div class="li"><span>Adresse email</span><span>' + c.mail + '</span></div><div class="li"><span>Nom</span><span>' + c.nom + '</span></div>' +
+      '<div class="li"><span>Paiement</span><span>' + (/^\d{4}$/.test(c.carte) ? 'Carte •••• ' + c.carte : c.carte) + '</span></div></div></div>' +
+    '<div class="btns"><button class="btn" id="rembourse">' + (c.rembourse ? 'Annuler « remboursé »' : 'Marquer remboursé') + '</button>' + (reste > 0 && !c.rembourse ? '<button class="btn" id="vente-main">Vente à la main</button>' : '') + '</div>' +
+    '<form class="f" id="form-vente" hidden><label class="field">Billets<input id="vm-q" type="number" min="1" max="' + reste + '" value="' + reste + '" required></label><label class="field">Montant reçu (€)<input id="vm-m" type="number" min="0" step="0.01" required></label><button class="btn primary" type="submit">Enregistrer</button></form>';
 }
 
-function vueVentes() {
-  const lignes = commandes.flatMap(c => c.ventes.map(v => ({ c, v }))).sort((a, b) => b.v.le.localeCompare(a.v.le));
-  let tRecu = 0, tCout = 0;
-  const rows = lignes.map(({ c, v }) => {
-    const cout = coutUnitaire(c) * v.qte, p = v.montant - cout; tRecu += v.montant; tCout += cout;
-    return '<tr class="click" data-detail="' + c.id + '"><td class="num">' + jour(v.le) + '</td><td class="ev">' + c.ev + '<small>' + places(c) + '</small></td><td class="num r">' + v.qte + '</td><td class="num r">' + eur(v.montant) + '</td><td class="num r">' + eur(cout) + '</td><td class="num r ' + (p >= 0 ? 'pos' : 'neg') + '">' + eur(p) + '</td><td class="num r">' + Math.round(p / cout * 100) + ' %</td><td><button class="pill ' + (v.paye ? 'p-vendu' : 'p-attente') + '" style="border:0" data-payer="' + c.id + '|' + v.id + '" title="Cliquer pour changer">' + (v.paye ? 'Payé' : 'En attente') + '</button></td></tr>';
-  }).join('');
-  const pT = tRecu - tCout;
-  return bandeau +
-    '<div class="head"><div><h1>Ventes</h1><p class="sub">Bénéfice de chaque vente = montant reçu de Seatiks − prix d\'achat des billets vendus</p></div></div>' +
-    '<div class="table-wrap"><table><thead><tr><th>Vendu le</th><th>Événement</th><th class="r">Billets</th><th class="r">Reçu</th><th class="r">Coût</th><th class="r">Bénéfice</th><th class="r">Marge</th><th>Paiement</th></tr></thead><tbody>' + rows + '</tbody>' +
-    '<tfoot><tr><td colspan="3">Total (' + lignes.length + ' ventes)</td><td class="num r">' + eur(tRecu) + '</td><td class="num r">' + eur(tCout) + '</td><td class="num r ' + (pT >= 0 ? 'pos' : 'neg') + '">' + eur(pT) + '</td><td class="num r">' + (tCout ? Math.round(pT / tCout * 100) : 0) + ' %</td><td></td></tr></tfoot></table></div>';
-}
-
-function vueDepenses() {
-  const achats = commandes.map(c => ({ le: c.achat, libelle: 'Achat ' + c.site + ' · ' + c.ev, detail: places(c), montant: c.rembourse ? 0 : c.prix, rembourse: c.rembourse, id: c.id }));
-  const tout = achats.concat(autresDepenses.map(d => ({ ...d, detail: 'Autre dépense' }))).sort((a, b) => b.le.localeCompare(a.le));
-  const parMois = {};
-  tout.forEach(d => { const m = d.le.slice(0, 7); parMois[m] = (parMois[m] || 0) + d.montant; });
-  const mois = Object.keys(parMois).sort().reverse();
-  const total = tout.reduce((s, d) => s + d.montant, 0);
-  return bandeau +
-    '<div class="head"><div><h1>Dépenses</h1><p class="sub">Achats de billets (importés des emails) et autres frais</p></div></div>' +
-    '<div class="kpis">' + mois.slice(0, 3).map(m => '<div class="kpi"><div class="lbl">' + new Date(m + '-15').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) + '</div><div class="val">' + eur(parMois[m]) + '</div></div>').join('') +
-      '<div class="kpi"><div class="lbl">Total</div><div class="val">' + eur(total) + '</div></div></div>' +
-    '<section class="panel" style="margin-bottom:16px"><h2>Ajouter une dépense</h2><form class="inline" id="form-depense"><label class="field">Date<input id="dep-date" type="date" value="2026-10-14" required></label><label class="field wide">Libellé<input id="dep-libelle" type="text" placeholder="Ex. frais de transfert" required></label><label class="field">Montant (€)<input id="dep-montant" type="number" min="0" step="0.01" required></label><button class="btn primary" type="submit">Ajouter</button></form></section>' +
-    '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Dépense</th><th class="r">Montant</th></tr></thead><tbody>' +
-    tout.map(d => '<tr' + (d.id ? ' class="click" data-detail="' + d.id + '"' : '') + '><td class="num">' + jour(d.le) + '</td><td class="ev">' + d.libelle + '<small>' + d.detail + (d.rembourse ? ' · remboursé' : '') + '</small></td><td class="num r">' + eur(d.montant) + '</td></tr>').join('') +
-    '</tbody></table></div>';
+function vueStats() {
+  const parEv = {}, parSite = {};
+  commandes.forEach(c => c.ventes.forEach(v => { const p = profitV(c, v); parEv[c.ev] = (parEv[c.ev] || 0) + p; parSite[c.site] = (parSite[c.site] || 0) + p; }));
+  const bars = obj => {
+    const l = Object.entries(obj).sort((a, b) => b[1] - a[1]), max = Math.max(1, ...l.map(x => Math.abs(x[1]))), neg = l.some(x => x[1] < 0), z = neg ? 50 : 0, sc = neg ? 50 : 100;
+    return '<div class="bars">' + l.map(([n, p]) => { const w = Math.abs(p) / max * sc; return '<div class="bar-row"><span class="name">' + n + '</span><span class="n ' + (p >= 0 ? 'plus' : 'neg') + '">' + sign(p) + '</span><div class="track"><div class="fill" style="left:' + (p >= 0 ? z : z - w) + '%;width:' + w + '%;background:var(' + (p >= 0 ? '--good' : '--bad') + ')"></div>' + (neg ? '<div class="zero"></div>' : '') + '</div></div>'; }).join('') + '</div>';
+  };
+  const ventes = commandes.flatMap(c => c.ventes.map(v => ({ c, v })));
+  const recu = ventes.reduce((s, x) => s + x.v.montant, 0), cout = ventes.reduce((s, x) => s + unit(x.c) * x.v.qte, 0);
+  return demo + '<h1>Statistiques</h1>' +
+    '<div class="kv"><div class="compte"><div class="lbl">Marge moyenne</div><div class="val n">' + Math.round((recu - cout) / cout * 100) + ' %</div><div class="hint">sur ' + ventes.length + ' ventes</div></div>' +
+    '<div class="compte"><div class="lbl">Chiffre d\'affaires</div><div class="val n">' + eur(recu) + '</div><div class="hint">' + eur(cout) + ' de coût d\'achat</div></div></div>' +
+    '<div class="card pad"><div class="row-head"><h2>Bénéfice par événement</h2></div>' + bars(parEv) + '</div>' +
+    '<div class="card pad"><div class="row-head"><h2>Bénéfice par site d\'achat</h2></div>' + bars(parSite) + '</div>';
 }
 
 // ---------- Rendu et interactions ----------
 function rendre() {
-  const vues = { tableau: vueTableau, billets: vueBillets, ventes: vueVentes, depenses: vueDepenses, detail: vueDetail };
-  $vue.innerHTML = vues[vueCourante]();
-  const actif = vueCourante === 'detail' ? 'billets' : vueCourante;
-  document.querySelectorAll('nav button[data-vue]').forEach(b => { if (b.dataset.vue === actif) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  $.innerHTML = ({ accueil: vueAccueil, billets: vueBillets, operations: vueOperations, stats: vueStats, detail: vueDetail })[vue]();
+  const act = vue === 'detail' ? retour : vue;
+  document.querySelectorAll('[data-vue]').forEach(b => b.dataset.vue === act ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
   brancher();
 }
-function aller(vue, opts) { vueCourante = vue; if (opts && opts.filtre) filtre = opts.filtre; window.scrollTo(0, 0); rendre(); }
-
-let minuteur;
-function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(minuteur); minuteur = setTimeout(() => { t.hidden = true; }, 3200); }
+function aller(v, o) { if (v !== 'detail') recherche = ''; vue = v; if (o) Object.assign(window, o); window.scrollTo(0, 0); rendre(); }
+let tm; function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.hidden = false; clearTimeout(tm); tm = setTimeout(() => { t.hidden = true; }, 3200); }
 
 function brancher() {
-  $vue.querySelectorAll('[data-detail]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('[data-payer]')) return; detailId = el.dataset.detail; aller('detail'); }));
-  $vue.querySelectorAll('[data-aller]').forEach(el => el.addEventListener('click', () => aller(el.dataset.aller, { filtre: el.dataset.filtre })));
-  $vue.querySelectorAll('.chip[data-filtre]').forEach(el => el.addEventListener('click', () => { filtre = el.dataset.filtre; rendre(); }));
-  const r = document.getElementById('recherche');
-  if (r) r.addEventListener('input', () => { recherche = r.value; const pos = r.selectionStart; rendre(); const n = document.getElementById('recherche'); n.focus(); n.setSelectionRange(pos, pos); });
-  $vue.querySelectorAll('[data-payer]').forEach(el => el.addEventListener('click', () => {
-    const [cid, vid] = el.dataset.payer.split('|'); const v = commandes.find(c => c.id === cid).ventes.find(x => x.id === vid);
-    v.paye = !v.paye; rendre(); toast(v.paye ? 'Vente marquée comme payée.' : 'Vente marquée en attente de paiement.');
+  $.querySelectorAll('[data-detail]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('[data-payer]')) return; retour = vue === 'detail' ? retour : vue; detailId = el.dataset.detail; aller('detail'); }));
+  $.querySelectorAll('[data-aller]').forEach(el => el.addEventListener('click', () => {
+    if (el.dataset.filtre) filtreOps = el.dataset.filtre; else if (el.dataset.aller === 'operations') filtreOps = 'tout';
+    if (el.dataset.fb) filtreBillets = el.dataset.fb; else if (el.dataset.aller === 'billets') filtreBillets = 'tous';
+    aller(el.dataset.aller);
   }));
+  $.querySelectorAll('[data-fo]').forEach(el => el.addEventListener('click', () => { filtreOps = el.dataset.fo; rendre(); }));
+  $.querySelectorAll('.chip[data-fb]').forEach(el => el.addEventListener('click', () => { filtreBillets = el.dataset.fb; rendre(); }));
+  const r = document.getElementById('recherche');
+  if (r) r.addEventListener('input', () => { recherche = r.value; const p = r.selectionStart; rendre(); const n = document.getElementById('recherche'); n.focus(); n.setSelectionRange(p, p); });
+  const ff = document.getElementById('form-frais');
+  if (ff) ff.addEventListener('submit', e => { e.preventDefault(); frais.push({ le: document.getElementById('fr-date').value, libelle: document.getElementById('fr-lib').value.trim(), montant: parseFloat(document.getElementById('fr-mt').value) || 0 }); rendre(); toast('Frais ajoutés.'); });
 
   const c = commandes.find(x => x.id === detailId);
-  const fp = document.getElementById('form-places');
-  if (fp) {
-    const libre = document.getElementById('pl-libre');
-    libre.addEventListener('change', () => { ['pl-rang', 'pl-sieges'].forEach(id => { document.getElementById(id).disabled = libre.checked; }); });
-    fp.addEventListener('submit', e => {
-      e.preventDefault();
-      [['bloc', 'pl-bloc'], ['rang', 'pl-rang'], ['sieges', 'pl-sieges']].forEach(([k, id]) => {
-        const v = document.getElementById(id).value.trim();
-        if (v !== c[k]) { c[k] = v; c.auto[k] = false; }
-      });
-      c.libre = libre.checked;
-      if (c.seatiks.auto) c.seatiks.section = c.libre ? c.bloc : 'Block ' + c.bloc;
-      rendre();
-      toast(c.annonce && c.annonce.active ? 'Places enregistrées, annonce Seatiks mise à jour (simulation).' : 'Places enregistrées. Elles seront utilisées pour l\'annonce Seatiks.');
-    });
-  }
-  const ps = document.getElementById('pl-section');
-  if (ps) ps.addEventListener('change', () => { if (!ps.value) return; c.seatiks.section = ps.value; c.seatiks.auto = false; rendre(); toast('Section Seatiks choisie : ' + ps.value + '.'); });
+  if (vue !== 'detail' || !c) return;
+  $.querySelectorAll('[data-payer]').forEach(el => el.addEventListener('click', () => { const v = c.ventes.find(x => x.id === el.dataset.payer); v.paye = !v.paye; rendre(); toast(v.paye ? 'Vente marquée payée.' : 'Vente remise en attente.'); }));
+  const fp = document.getElementById('form-places'), libre = document.getElementById('pl-libre');
+  if (libre) libre.addEventListener('change', () => ['pl-rang', 'pl-sieges'].forEach(id => { document.getElementById(id).disabled = libre.checked; }));
+  if (fp) fp.addEventListener('submit', e => {
+    e.preventDefault();
+    [['bloc', 'pl-bloc'], ['rang', 'pl-rang'], ['sieges', 'pl-sieges']].forEach(([k, id]) => { const v = document.getElementById(id).value.trim(); if (v !== c[k]) { c[k] = v; c.auto[k] = false; } });
+    c.libre = libre.checked;
+    const sel = document.getElementById('pl-section');
+    if (sel && sel.value) { c.seatiks.section = sel.value; c.seatiks.auto = false; } else if (c.seatiks.auto) c.seatiks.section = c.libre ? c.bloc : 'Block ' + c.bloc;
+    rendre(); toast(c.annonce && c.annonce.active ? 'Places enregistrées, annonce Seatiks mise à jour (simulation).' : 'Places enregistrées.');
+  });
   const fa = document.getElementById('form-annonce');
   if (fa) {
-    const champ = document.getElementById('prix-annonce');
-    champ.addEventListener('input', () => { const p = parseFloat(champ.value); const reste = c.qte - vendus(c); document.getElementById('marge').textContent = p > 0 ? eur(p * reste * 0.9 - coutUnitaire(c) * reste) : '—'; });
-    fa.addEventListener('submit', e => {
-      e.preventDefault(); const p = parseFloat(champ.value); if (!(p > 0)) return;
-      const nouveau = !(c.annonce && c.annonce.active); c.annonce = { prix: p, active: true }; rendre();
-      toast(nouveau ? 'Annonce publiée sur Seatiks à ' + eur(p) + ' par billet (simulation).' : 'Prix mis à jour sur Seatiks : ' + eur(p) + ' (simulation).');
-    });
+    const px = document.getElementById('prix'), reste = c.qte - vendus(c);
+    px.addEventListener('input', () => { const p = parseFloat(px.value); document.getElementById('marge').textContent = p > 0 ? sign(p * reste * 0.9 - unit(c) * reste) : '—'; });
+    fa.addEventListener('submit', e => { e.preventDefault(); const p = parseFloat(px.value); if (!(p > 0)) return; const neuf = !(c.annonce && c.annonce.active); c.annonce = { prix: p, active: true }; rendre(); toast(neuf ? 'Publié sur Seatiks à ' + eur(p) + ' par billet (simulation).' : 'Prix mis à jour : ' + eur(p) + ' (simulation).'); });
   }
   const ret = document.getElementById('retirer');
   if (ret) ret.addEventListener('click', () => { c.annonce.active = false; rendre(); toast('Annonce retirée de la vente (simulation).'); });
   const rb = document.getElementById('rembourse');
-  if (rb) rb.addEventListener('click', () => { c.rembourse = !c.rembourse; if (c.rembourse && c.annonce) c.annonce.active = false; rendre(); toast(c.rembourse ? 'Commande marquée comme remboursée.' : 'Commande remise en stock.'); });
+  if (rb) rb.addEventListener('click', () => { c.rembourse = c.rembourse ? null : '2026-10-14'; if (c.rembourse && c.annonce) c.annonce.active = false; rendre(); toast(c.rembourse ? 'Commande marquée remboursée.' : 'Commande remise en stock.'); });
   const vm = document.getElementById('vente-main'), fv = document.getElementById('form-vente');
-  if (vm) vm.addEventListener('click', () => { fv.hidden = !fv.hidden; if (!fv.hidden) document.getElementById('vm-montant').focus(); });
-  if (fv) fv.addEventListener('submit', e => {
-    e.preventDefault();
-    const q = parseInt(document.getElementById('vm-qte').value, 10), m = parseFloat(document.getElementById('vm-montant').value);
-    if (!(q > 0) || !(m >= 0)) return;
-    c.ventes.push({ id: 'MAIN-' + (c.ventes.length + 1), le: '2026-10-14', qte: Math.min(q, c.qte - vendus(c)), montant: m, paye: false });
-    rendre(); toast('Vente ajoutée. Bénéfice recalculé.');
-  });
-  const fd = document.getElementById('form-depense');
-  if (fd) fd.addEventListener('submit', e => {
-    e.preventDefault();
-    autresDepenses.push({ le: document.getElementById('dep-date').value, libelle: document.getElementById('dep-libelle').value.trim(), montant: parseFloat(document.getElementById('dep-montant').value) || 0 });
-    rendre(); toast('Dépense ajoutée.');
-  });
+  if (vm) vm.addEventListener('click', () => { fv.hidden = !fv.hidden; if (!fv.hidden) document.getElementById('vm-m').focus(); });
+  if (fv) fv.addEventListener('submit', e => { e.preventDefault(); const q = parseInt(document.getElementById('vm-q').value, 10), m = parseFloat(document.getElementById('vm-m').value); if (!(q > 0) || !(m >= 0)) return; c.ventes.push({ id: 'MAIN-' + (c.ventes.length + 1), le: '2026-10-14', qte: Math.min(q, c.qte - vendus(c)), montant: m, paye: false }); rendre(); toast('Vente ajoutée, bénéfice recalculé.'); });
 }
 
-document.querySelectorAll('nav button[data-vue]').forEach(b => b.addEventListener('click', () => aller(b.dataset.vue, b.dataset.vue === 'billets' ? { filtre: 'tous' } : null)));
+document.querySelectorAll('[data-vue]').forEach(b => b.addEventListener('click', () => { if (b.dataset.vue === 'operations') filtreOps = 'tout'; if (b.dataset.vue === 'billets') filtreBillets = 'tous'; aller(b.dataset.vue); }));
 rendre();
 </script>
