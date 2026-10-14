@@ -533,9 +533,6 @@ function vueAccueil() {
       kpi('Ventes', String(m.ventes), (m.ventes ? (m.billets / m.ventes).toFixed(1).replace('.0', '') : 0) + ' billets / vente', delta(m.ventes, mp.ventes), sparkMini(serie('billets'))) +
     '</div>' +
 
-    '<div><div class="row-head"><h2>Vos billets à vendre</h2><button class="linkbtn" data-aller="billets">Tout voir</button></div><div class="rail">' +
-      commandes.filter(c => actif(c) && new Date(c.date + 'T23:59:00') >= AUJ).sort((a, b) => a.date.localeCompare(b.date)).map(carteBillet).join('') + '</div></div>' +
-
     '<div class="ov-mid">' +
       '<section class="panel"><div class="panel-h"><div><h2>Historique des ventes</h2><p>Billets vendus, prix moyen et chiffre d\'affaires par jour' + (n < 7 ? ' (7 derniers jours affichés)' : '') + '.</p></div>' +
         '<div class="seg" role="group" aria-label="Affichage">' + [['billets', 'Billets'], ['prix', 'Prix moyen'], ['ca', 'Chiffre d\'affaires'], ['combine', 'Combiné']].map(x => '<button data-mode="' + x[0] + '" aria-pressed="' + (modeGraph === x[0]) + '">' + x[1] + '</button>').join('') + '</div></div>' +
