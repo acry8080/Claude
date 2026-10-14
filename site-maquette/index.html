@@ -22,6 +22,8 @@
   --bad-soft: #351816;
   --display: "Geist", "Helvetica Neue", Arial, sans-serif;
   --body: "Geist", "Helvetica Neue", Arial, sans-serif;
+  --c-prix: #e9a23b;
+  --c-ca: #8b7cf6;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -188,6 +190,52 @@ form.f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1
 .dash-top .compte .hint { grid-column: 2; }
 .dash-bottom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 12px; align-items: start; }
 .page-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ov-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; max-width: 100%; overflow-x: auto; }
+.seg button { border: 0; background: none; color: var(--muted); font-weight: 600; font-size: .82rem; padding: 5px 10px; border-radius: 7px; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; }
+.kpi .lbl { font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--good); }
+.kpi .val { font: 700 1.5rem/1.2 var(--display); letter-spacing: -.01em; grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+.kpi .hint { font-size: .76rem; color: var(--muted); align-self: end; }
+.kpi svg { width: 80px; height: 26px; align-self: end; }
+.delta { justify-self: end; font-size: .7rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.d-up { background: var(--good-soft); color: var(--good); }
+.d-down { background: var(--bad-soft); color: var(--bad); }
+.d-flat { background: var(--surface-2); color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.panel-h { display: flex; align-items: start; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+.panel-h p { margin: 2px 0 0; color: var(--muted); font-size: .8rem; }
+.panel-b { padding: 12px 16px 14px; }
+.mini-stats { display: flex; gap: 22px; flex-wrap: wrap; align-items: end; }
+.mini-stats .k { font-size: .66rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mini-stats .v { font: 700 1.1rem var(--display); font-variant-numeric: tabular-nums; }
+.mini-stats .v small { font-size: .7rem; font-weight: 700; margin-left: 4px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .76rem; color: var(--muted); margin-left: auto; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.chart { display: block; width: 100%; height: auto; margin-top: 10px; }
+.chart text { fill: var(--muted); font: 10px var(--body); }
+.ov-mid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; }
+.ov-bot { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.donut-wrap { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 16px; align-items: center; }
+.donut-leg { display: grid; gap: 8px; font-size: .84rem; }
+.donut-leg div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.donut-leg i { width: 9px; height: 9px; border-radius: 2px; }
+.donut-leg .n { color: var(--muted); }
+.tbl-wrap { overflow-x: auto; }
+table.tbl { width: 100%; border-collapse: collapse; min-width: 600px; font-size: .82rem; }
+.tbl th:first-child, .tbl td:first-child { padding-left: 16px; }
+.tbl th:last-child, .tbl td:last-child { padding-right: 16px; }
+.tbl th { text-align: left; font-size: .66rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl tbody tr { cursor: pointer; }
+.tbl tbody tr:hover td { background: var(--surface-2); }
+.tbl td.ev { font-weight: 600; max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+.tbl .r { text-align: right; }
+.mk { display: inline-flex; align-items: center; gap: 6px; }
+.mk b { width: 16px; height: 16px; border-radius: 4px; display: inline-grid; place-items: center; font-size: .6rem; color: #fff; }
 .kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 11px 16px; border-radius: 12px; font-weight: 500; max-width: calc(100% - 32px); z-index: 30; }
@@ -195,7 +243,8 @@ form.f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1
 @keyframes up { from { opacity: 0; transform: translate(-50%, 8px); } }
 
 @media (max-width: 900px) {
-  .dash-top, .dash-bottom { grid-template-columns: minmax(0, 1fr); }
+  .dash-top, .dash-bottom, .ov-mid, .ov-bot { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
   .app { grid-template-columns: minmax(0, 1fr); }
@@ -222,7 +271,7 @@ form.f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1
   <aside class="side">
     <div class="logo"><i>RB</i>Revente Billets</div>
     <nav class="tabs" aria-label="Navigation">
-      <button data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 7h6V4h-6z"/></svg>Tableau de bord</button>
+      <button data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 7h6V4h-6z"/></svg>Vue d'ensemble</button>
       <button data-vue="billets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg>Billets</button>
       <button data-vue="operations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h13l-3-3M17 17H4l3 3"/></svg>Opérations</button>
       <button data-vue="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Statistiques</button>
@@ -270,7 +319,25 @@ const frais = [
   { le: '2026-09-15', libelle: 'Abonnement iCloud+', montant: 2.99 },
   { le: '2026-10-01', libelle: 'Abonnement iCloud+', montant: 2.99 },
 ];
+(function historique() {
+  const ev = [['Paris Saint-Germain vs Olympique de Marseille', 'Parc des Princes', 'Viagogo', 'Tribune Auteuil'], ['Coldplay', 'Stade de France', 'Ticketmaster', 'Cat. 2'],
+    ['FC Augsburg vs FC Bayern München', 'WWK Arena', 'Viagogo', 'M'], ['Real Madrid vs FC Barcelona', 'Santiago Bernabéu', 'StubHub', '512'],
+    ['Taylor Swift', 'Paris La Défense Arena', 'Ticketmaster', 'Cat. 1'], ['Arsenal vs Chelsea', 'Emirates Stadium', 'StubHub', '18'],
+    ['Angèle', 'Accor Arena, Paris', 'Fnac Spectacles', 'Fosse'], ['Olympique Lyonnais vs AS Monaco', 'Groupama Stadium', 'Viagogo', 'Virage Nord']];
+  const mks = ['HelloTickets', 'Viagogo', 'Vivid Seats', 'FootballTicketNet', 'StubHub', 'Venuor'];
+  let g = 7; const r = () => (g = g * 16807 % 2147483647) / 2147483647;
+  const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  const jour = n => iso(new Date(AUJ.getTime() - n * 864e5));
+  for (let i = 0; i < 28; i++) {
+    const e = ev[i % ev.length], qte = r() < .7 ? 2 : 4, unitP = 90 + Math.round(r() * 260), achatJ = 8 + Math.round(r() * 85);
+    const venteJ = Math.max(0, achatJ - 2 - Math.round(r() * Math.min(40, achatJ - 2)));
+    const montant = Math.round(unitP * qte * (0.85 + r() * 0.95) * 100) / 100;
+    commandes.push({ id: 'H' + (480000 + i * 731), site: e[2], ev: e[0], lieu: e[1], date: jour(venteJ - 6), achat: jour(achatJ), bloc: e[3], rang: e[3] === 'Fosse' ? '' : String(3 + Math.round(r() * 20)), sieges: e[3] === 'Fosse' ? '' : (10 + i) + '-' + (10 + i + qte - 1), qte, prix: unitP * qte, mail: 'exemple' + i + '@icloud.com', nom: 'Exemple', carte: '3392', annonce: { prix: Math.round(montant / qte), active: false },
+      ventes: [{ id: 'SK-' + (47000 + i * 17), le: jour(venteJ), qte, montant, paye: venteJ > 5 || r() < .4, mk: mks[Math.floor(r() * mks.length)], livre: venteJ > 3 || r() < .5 }] });
+  }
+})();
 commandes.forEach(c => {
+  c.ventes.forEach((v, i) => { if (!v.mk) v.mk = ['HelloTickets', 'Vivid Seats', 'Venuor'][i % 3]; if (v.livre === undefined) v.livre = v.paye; });
   c.auto = { bloc: !!c.bloc, rang: !!c.rang, sieges: !!c.sieges };
   c.libre = c.bloc === 'Fosse';
   c.seatiks = c.id === '656373947'
@@ -332,6 +399,7 @@ function totaux() {
 }
 
 // ---------- Vues ----------
+let periode = 30, modeGraph = 'combine';
 let vue = 'accueil', filtreOps = 'tout', filtreBillets = 'tous', recherche = '', detailId = null, retour = 'accueil';
 const $ = document.getElementById('vue');
 const demo = '<div class="demo"><b>Maquette.</b> Toutes les données sont des exemples, et rien n\'est envoyé à Seatiks.</div>';
@@ -369,28 +437,130 @@ function sparkline() {
     '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="3.5" fill="var(--accent)"/></svg>';
 }
 
+const ISO = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+const AUJ_ISO = ISO(AUJ);
+const nbJours = () => periode === 'tout' ? Math.max(7, Math.ceil((AUJ - new Date(commandes.reduce((m, c) => c.achat < m ? c.achat : m, AUJ_ISO) + 'T12:00:00')) / 864e5) + 1) : periode;
+const jourMoins = n => ISO(new Date(AUJ.getTime() - n * 864e5));
+function ventesEntre(debut, fin) { return commandes.flatMap(c => c.ventes.filter(v => v.le >= debut && v.le <= fin).map(v => ({ c, v }))); }
+function mesures(debut, fin) {
+  const vs = ventesEntre(debut, fin);
+  const recu = vs.reduce((t, x) => t + x.v.montant, 0), cout = vs.reduce((t, x) => t + unit(x.c) * x.v.qte, 0), billets = vs.reduce((t, x) => t + x.v.qte, 0);
+  return { recu, profit: recu - cout, roi: cout ? (recu - cout) / cout * 100 : 0, ventes: vs.length, billets, vs };
+}
+function delta(cur, prev) {
+  if (!prev) return cur ? '<span class="delta d-up">nouveau</span>' : '<span class="delta d-flat">—</span>';
+  const d = (cur - prev) / Math.abs(prev) * 100;
+  return '<span class="delta ' + (d >= 0 ? 'd-up' : 'd-down') + '">' + (d >= 0 ? '↗ +' : '↘ ') + Math.round(d) + ' %</span>';
+}
+function parJour(n) {
+  const jours = [];
+  for (let i = n - 1; i >= 0; i--) { const j = jourMoins(i); const m = mesures(j, j); jours.push({ j, billets: m.billets, recu: m.recu, profit: m.profit }); }
+  return jours;
+}
+function sparkMini(vals) {
+  const W = 80, H = 26, max = Math.max(1, ...vals), min = Math.min(0, ...vals);
+  const pts = vals.map((v, i) => (i / Math.max(1, vals.length - 1) * W).toFixed(1) + ',' + (H - 3 - (v - min) / (max - min || 1) * (H - 6)).toFixed(1)).join(' ');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><polyline points="' + pts + '" fill="none" stroke="var(--good)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>';
+}
+const arrondi = (v, pas) => Math.max(pas, Math.ceil(v / pas) * pas);
+const courtFr = j => new Date(j + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+function graphique(jours) {
+  const W = 760, H = 230, L = 30, R = 50, T = 10, B = 26, pw = W - L - R, ph = H - T - B, n = jours.length;
+  const maxB = arrondi(Math.max(...jours.map(d => d.billets)), 2);
+  const prix = jours.map(d => d.billets ? d.recu / d.billets : null);
+  const maxE = arrondi(Math.max(1, ...jours.map(d => d.recu), ...prix.filter(Boolean)), 200);
+  const x = i => L + (i + .5) * pw / n, yB = v => T + ph - v / maxB * ph, yE = v => T + ph - v / maxE * ph;
+  let g = '';
+  for (let k = 0; k <= 4; k++) {
+    const y = T + ph - k / 4 * ph;
+    g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="var(--line)"/>';
+    if (modeGraph !== 'prix' && modeGraph !== 'ca') g += '<text x="' + (L - 6) + '" y="' + (y + 3) + '" text-anchor="end">' + Math.round(maxB * k / 4) + '</text>';
+    if (modeGraph !== 'billets') g += '<text x="' + (W - R + 6) + '" y="' + (y + 3) + '">' + Math.round(maxE * k / 4) + ' €</text>';
+  }
+  const pas = Math.max(1, Math.round(n / 5));
+  jours.forEach((d, i) => { if (i % pas === 0 || i === n - 1) g += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + (d.j === AUJ_ISO ? "Auj." : courtFr(d.j)) + '</text>'; });
+  if (modeGraph === 'billets' || modeGraph === 'combine') {
+    const bw = Math.max(2, pw / n * .6);
+    jours.forEach((d, i) => { if (d.billets) g += '<rect x="' + (x(i) - bw / 2) + '" y="' + yB(d.billets) + '" width="' + bw + '" height="' + (T + ph - yB(d.billets)) + '" rx="2" fill="var(--accent)" fill-opacity=".55"/>'; });
+  }
+  if (modeGraph === 'ca' || modeGraph === 'combine') {
+    const pts = jours.map((d, i) => x(i) + ',' + yE(d.recu)).join(' ');
+    if (modeGraph === 'ca') g += '<polygon points="' + x(0) + ',' + (T + ph) + ' ' + pts + ' ' + x(n - 1) + ',' + (T + ph) + '" fill="var(--c-ca)" fill-opacity=".15"/>';
+    g += '<polyline points="' + pts + '" fill="none" stroke="var(--c-ca)" stroke-width="1.5"' + (modeGraph === 'combine' ? ' stroke-dasharray="4 3"' : '') + '/>';
+  }
+  if (modeGraph === 'prix' || modeGraph === 'combine') {
+    let seg = '', dernier = null;
+    prix.forEach((v, i) => { if (v != null) { seg += (dernier == null ? ' M' : ' L') + x(i) + ',' + yE(v); dernier = v; } });
+    g += '<path d="' + seg + '" fill="none" stroke="var(--c-prix)" stroke-width="2"/>';
+    prix.forEach((v, i) => { if (v != null) g += '<circle cx="' + x(i) + '" cy="' + yE(v) + '" r="2.5" fill="var(--c-prix)"/>'; });
+  }
+  return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Historique des ventes par jour">' + g + '</svg>';
+}
+function donut(parts) {
+  const tot = parts.reduce((t, p) => t + p[1], 0) || 1, R = 50, C = 2 * Math.PI * R;
+  let off = 0, arcs = '';
+  parts.forEach(p => { const l = p[1] / tot * C; if (p[1]) arcs += '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="' + p[2] + '" stroke-width="14" stroke-dasharray="' + Math.max(0, l - 2) + ' ' + (C - Math.max(0, l - 2)) + '" stroke-dashoffset="' + -off + '" transform="rotate(-90 65 65)"/>'; off += l; });
+  return '<svg viewBox="0 0 130 130" aria-hidden="true"><circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' + arcs +
+    '<text x="65" y="64" text-anchor="middle" fill="var(--ink)" style="font:700 20px var(--display)">' + parts.reduce((t, p) => t + p[1], 0) + '</text><text x="65" y="82" text-anchor="middle" fill="var(--muted)" style="font:11px var(--body)">billets actifs</text></svg>';
+}
+
 function vueAccueil() {
-  const t = totaux();
-  const nComp = commandes.filter(aCompleter).length;
-  const nLister = commandes.filter(c => statut(c)[0] === 'list' && actif(c) && !aCompleter(c)).length;
-  const nAnn = commandes.filter(c => c.annulee && !c.rembourse).length;
-  const ent = Math.floor(Math.abs(t.net)), dec = Math.round((Math.abs(t.net) - ent) * 100);
-  const alertes = [
-    nComp && ['var(--warn-soft)', 'var(--warn)', nComp, 'Places à compléter', 'Le site n\'a pas tout trouvé dans l\'email', 'completer'],
-    nLister && ['var(--accent-soft)', 'var(--accent)', nLister, 'Prêts à mettre en vente', 'Places complètes, pas encore sur Seatiks', 'list'],
-    nAnn && ['var(--bad-soft)', 'var(--bad)', nAnn, 'Annulation probable', 'StubHub : « a further email »', 'annule'],
-  ].filter(Boolean);
-  return demo + '<div class="page-head"><h1>Tableau de bord</h1><span class="sub">' + AUJ.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</span></div>' +
-    '<div class="dash-top"><section class="hero"><div class="lbl">Bénéfice net</div><div class="big n">' + (t.net < 0 ? '−' : '') + ent.toLocaleString('fr-FR') + '<small>,' + String(dec).padStart(2, '0') + ' €</small></div>' +
-      '<div class="delta">Ce mois-ci <b>' + sign(t.profitMois) + '</b></div>' + sparkline() +
-      '<div class="hero-foot"><span>Bénéfice cumulé, après prix d\'achat et frais</span><span>sept. → oct. 2026</span></div></section>' +
-    '<div class="comptes">' + ('<button class="compte" data-aller="operations" data-filtre="attente"><div class="ic" style="background:var(--warn-soft);color:var(--warn)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="lbl">À recevoir</div><div class="val n">' + eur(t.aRecevoir) + '</div><div class="hint">' + t.nAttente + ' vente(s) en attente</div></button>' +
-      '<button class="compte" data-aller="billets"><div class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg></div><div class="lbl">Stock</div><div class="val n">' + eur(t.stock) + '</div><div class="hint">' + t.stockN + ' billets non vendus</div></button>' +
-      '<button class="compte" data-aller="operations" data-filtre="achat"><div class="ic" style="background:var(--surface-2);color:var(--ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></div><div class="lbl">Dépenses d\'octobre</div><div class="val n">' + eur(t.depMois) + '</div><div class="hint">' + eur(t.recuMois) + ' reçus ce mois</div></button>') + '</div></div>' +
-    '<div><div class="row-head"><h2>Vos billets</h2><button class="linkbtn" data-aller="billets">Tout voir (' + commandes.length + ')</button></div><div class="rail">' +
+  const n = periode === 'aujourdhui' ? 1 : nbJours();
+  const debut = jourMoins(n - 1), prevFin = jourMoins(n), prevDebut = jourMoins(2 * n - 1);
+  const m = mesures(debut, AUJ_ISO), mp = mesures(prevDebut, prevFin);
+  const jours = parJour(Math.max(7, n));
+  const serie = k => jours.slice(-Math.max(7, n)).map(d => d[k]);
+  const libelle = { aujourdhui: "aujourd'hui", 7: 'sur 7 jours', 30: 'sur 30 jours', 90: 'sur 90 jours', tout: 'depuis le début' }[periode];
+  const periodes = [['aujourdhui', "Aujourd'hui"], [7, '7 jours'], [30, '30 jours'], [90, '90 jours'], ['tout', 'Tout']];
+  const kpi = (lbl, val, hint, d, sp) => '<div class="kpi"><span class="lbl">' + lbl + '</span>' + d + '<span class="val">' + val + '</span><span class="hint">' + hint + '</span>' + sp + '</div>';
+
+  const actifs = commandes.filter(actif);
+  const parts = [['En vente', actifs.filter(c => statut(c)[0] === 'vente' || statut(c)[0] === 'partiel').length, 'var(--accent)'],
+    ['Prêts à lister', actifs.filter(c => statut(c)[0] === 'list' && !aCompleter(c)).length, 'var(--c-ca)'],
+    ['Places à compléter', actifs.filter(aCompleter).length, 'var(--warn)'],
+    ['Annulation probable', commandes.filter(c => c.annulee && !c.rembourse).length, 'var(--bad)']];
+  const totParts = parts.reduce((t, p) => t + p[1], 0) || 1;
+  const recentes = m.vs.sort((a, b) => b.v.le.localeCompare(a.v.le)).slice(0, 8);
+  const couleurMk = { HelloTickets: '#3949ab', Viagogo: '#7cb342', 'Vivid Seats': '#7b3fe4', FootballTicketNet: '#2e7d32', StubHub: '#4a2c8a', Venuor: '#283593' };
+
+  return '<div class="ov-head"><div><h1>Vue d\'ensemble</h1><p class="sub">Vos performances de revente en un coup d\'œil, ' + libelle + '.</p></div>' +
+      '<div class="seg" role="group" aria-label="Période">' + periodes.map(p => '<button data-periode="' + p[0] + '" aria-pressed="' + (String(periode) === String(p[0])) + '">' + p[1] + '</button>').join('') + '</div></div>' +
+    '<div class="demo"><b>Maquette.</b> Données d\'exemple, rien n\'est envoyé à Seatiks.</div>' +
+    '<div class="kpis">' +
+      kpi('Reçu', eur(m.recu), 'net des frais Seatiks', delta(m.recu, mp.recu), sparkMini(serie('recu'))) +
+      kpi('Bénéfice', sign(m.profit), (m.recu ? Math.round(m.profit / m.recu * 100) : 0) + ' % de marge', delta(m.profit, mp.profit), sparkMini(serie('profit'))) +
+      kpi('Rentabilité', (m.roi >= 0 ? '+' : '') + Math.round(m.roi) + ' %', (m.billets ? eur(m.profit / m.billets) : '—') + ' / billet', delta(m.roi, mp.roi), sparkMini(serie('profit'))) +
+      kpi('Ventes', String(m.ventes), (m.ventes ? (m.billets / m.ventes).toFixed(1).replace('.0', '') : 0) + ' billets / vente', delta(m.ventes, mp.ventes), sparkMini(serie('billets'))) +
+    '</div>' +
+
+    '<div><div class="row-head"><h2>Vos billets à vendre</h2><button class="linkbtn" data-aller="billets">Tout voir</button></div><div class="rail">' +
       commandes.filter(c => actif(c) && new Date(c.date + 'T23:59:00') >= AUJ).sort((a, b) => a.date.localeCompare(b.date)).map(carteBillet).join('') + '</div></div>' +
-    '<div class="dash-bottom"><div><div class="row-head"><h2>À faire</h2></div>' + (alertes.length ? '<div class="alerts">' + alertes.map(a => '<button class="alert" data-aller="billets" data-fb="' + a[5] + '"><span class="dot" style="background:' + a[0] + ';color:' + a[1] + '">' + a[2] + '</span><span class="txt"><b>' + a[3] + '</b><span class="sub">' + a[4] + '</span></span><span class="chev">›</span></button>').join('') + '</div>' : '<p class="sub">Rien à faire pour l\'instant.</p>') + '</div>' +
-    '<div><div class="row-head"><h2>Opérations récentes</h2><button class="linkbtn" data-aller="operations">Tout voir</button></div>' + fil(operations().slice(0, 7)) + '</div></div>';
+
+    '<div class="ov-mid">' +
+      '<section class="panel"><div class="panel-h"><div><h2>Historique des ventes</h2><p>Billets vendus, prix moyen et chiffre d\'affaires par jour' + (n < 7 ? ' (7 derniers jours affichés)' : '') + '.</p></div>' +
+        '<div class="seg" role="group" aria-label="Affichage">' + [['billets', 'Billets'], ['prix', 'Prix moyen'], ['ca', 'Chiffre d\'affaires'], ['combine', 'Combiné']].map(x => '<button data-mode="' + x[0] + '" aria-pressed="' + (modeGraph === x[0]) + '">' + x[1] + '</button>').join('') + '</div></div>' +
+        '<div class="panel-b"><div class="mini-stats"><div><div class="k">Billets</div><div class="v">' + m.billets + '<small class="' + (m.billets >= mp.billets ? 'plus' : 'neg') + '">' + delta(m.billets, mp.billets).replace(/<[^>]+>/g, '') + '</small></div></div>' +
+          '<div><div class="k">Prix moyen</div><div class="v">' + (m.billets ? eur(m.recu / m.billets) : '—') + '</div></div>' +
+          '<div><div class="k">Chiffre d\'affaires</div><div class="v">' + eur(m.recu) + '<small class="' + (m.recu >= mp.recu ? 'plus' : 'neg') + '">' + delta(m.recu, mp.recu).replace(/<[^>]+>/g, '') + '</small></div></div>' +
+          '<div class="legend"><span><i style="background:var(--accent)"></i>Billets / jour</span><span><i style="background:var(--c-prix)"></i>Prix moyen</span><span><i style="background:var(--c-ca)"></i>Chiffre d\'affaires</span></div></div>' +
+        graphique(jours) + '</div></section>' +
+      '<section class="panel"><div class="panel-h"><div><h2>Vos annonces</h2><p>Où en sont les billets pas encore vendus.</p></div><button class="linkbtn" data-aller="billets">Voir</button></div>' +
+        '<div class="panel-b donut-wrap">' + donut(parts) + '<div class="donut-leg">' + parts.map(p => '<div><i style="background:' + p[2] + '"></i><span>' + p[0] + '</span><b>' + p[1] + '</b><span class="n">' + Math.round(p[1] / totParts * 100) + ' %</span></div>').join('') + '</div></div></section>' +
+    '</div>' +
+
+    '<div class="ov-bot">' +
+      '<section class="panel"><div class="panel-h"><div><h2>Ventes récentes</h2><p>Dernières ventes ' + libelle + '.</p></div><button class="linkbtn" data-aller="operations" data-filtre="vente">Tout voir</button></div>' +
+        (recentes.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Plateforme</th><th>Événement</th><th>Places</th><th class="r">Qté</th><th class="r">Reçu</th><th class="r">Bénéfice</th><th>Statut</th></tr></thead><tbody>' +
+          recentes.map(({ c, v }) => { const p = profitV(c, v); return '<tr data-detail="' + c.id + '"><td>' + courtFr(v.le) + '</td><td><span class="mk"><b style="background:' + (couleurMk[v.mk] || '#555') + '">' + v.mk[0] + '</b>' + v.mk + '</span></td><td class="ev">' + c.ev + '</td><td>' + c.bloc + '</td><td class="r">' + v.qte + '</td><td class="r n">' + eur(v.montant) + '</td><td class="r n ' + (p >= 0 ? 'plus' : 'neg') + '">' + sign(p) + '</td><td>' + (v.livre ? '<span class="pill p-vendu">Livré</span>' : '<span class="pill p-attente">À livrer</span>') + '</td></tr>'; }).join('') +
+          '</tbody></table></div>' : '<p class="sub" style="padding:16px">Aucune vente sur cette période.</p>') + '</section>' +
+      '<section class="panel"><div class="panel-h"><div><h2>À faire</h2><p>Ce qui attend une action de votre part.</p></div></div><div class="panel-b alerts">' +
+        [[parts[2][1], 'var(--warn-soft)', 'var(--warn)', 'Places à compléter', 'Le site n\'a pas tout trouvé dans l\'email', 'completer'],
+         [parts[1][1], 'var(--accent-soft)', 'var(--accent)', 'Prêts à mettre en vente', 'Places complètes, pas encore sur Seatiks', 'list'],
+         [commandes.flatMap(c => c.ventes).filter(v => !v.livre).length, 'var(--warn-soft)', 'var(--warn)', 'Billets à livrer', 'Vendus, pas encore envoyés à l\'acheteur', 'vendu'],
+         [parts[3][1], 'var(--bad-soft)', 'var(--bad)', 'Annulation probable', 'StubHub : « a further email »', 'annule']]
+          .filter(a => a[0]).map(a => '<button class="alert" data-aller="billets" data-fb="' + a[5] + '"><span class="dot" style="background:' + a[1] + ';color:' + a[2] + '">' + a[0] + '</span><span class="txt"><b>' + a[3] + '</b><span class="sub">' + a[4] + '</span></span><span class="chev">›</span></button>').join('') +
+      '</div></section>' +
+    '</div>';
 }
 
 function vueOperations() {
@@ -525,6 +695,8 @@ function brancher() {
   $.querySelectorAll('.chip[data-fb]').forEach(el => el.addEventListener('click', () => { filtreBillets = el.dataset.fb; rendre(); }));
   const r = document.getElementById('recherche');
   if (r) r.addEventListener('input', () => { recherche = r.value; const p = r.selectionStart; rendre(); const n = document.getElementById('recherche'); n.focus(); n.setSelectionRange(p, p); });
+  $.querySelectorAll('[data-periode]').forEach(el => el.addEventListener('click', () => { const v = el.dataset.periode; periode = isNaN(v) ? v : Number(v); rendre(); }));
+  $.querySelectorAll('[data-mode]').forEach(el => el.addEventListener('click', () => { modeGraph = el.dataset.mode; rendre(); }));
   const ff = document.getElementById('form-frais');
   if (ff) ff.addEventListener('submit', e => { e.preventDefault(); frais.push({ le: document.getElementById('fr-date').value, libelle: document.getElementById('fr-lib').value.trim(), montant: parseFloat(document.getElementById('fr-mt').value) || 0 }); rendre(); toast('Frais ajoutés.'); });
 
